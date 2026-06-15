@@ -125,13 +125,6 @@ const HomeScreen = ({ onOpenGroup, onGoTo }: HomeScreenProps) => {
                   : g.trips.length > 0
                     ? "Planly AI suggestions ready"
                     : "Ready to plan";
-              const nextAction = g.decidedTrip
-                ? "View plan"
-                : needsReply && g.trips.length > 0
-                  ? "Vote now"
-                  : g.trips.length > 0
-                    ? "Compare ideas"
-                    : "Open group";
 
              return (
                 <button
@@ -209,7 +202,7 @@ const HomeScreen = ({ onOpenGroup, onGoTo }: HomeScreenProps) => {
         </button>
         <button
           onClick={() => onGoTo("groups")}
-          className="py-3.5 rounded-2xl bg-white text-secondary-foreground font-heading font-bold flex items-center justify-center gap-2 shadow-card border border-border"
+          className="py-3.5 rounded-2xl bg-navy text-primary-foreground font-heading font-bold flex items-center justify-center gap-2 shadow-card border border-border"
         >
           <Compass size={18} /> Open groups
         </button>

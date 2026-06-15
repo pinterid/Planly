@@ -6,7 +6,7 @@ import BuddiesScreen from "@/components/BuddiesScreen";
 import GroupPlanningScreen from "@/components/GroupPlanningScreen";
 import ProfileScreen from "@/components/ProfileScreen";
 import LoginScreen from "@/components/LoginScreen";
-import { isOnboardingComplete, isSignedIn, logIn, signOut } from "@/data/profileStore";
+import { getProfile, isOnboardingComplete, isSignedIn, logIn, signOut } from "@/data/profileStore";
 
 const Index = () => {
   const [signedIn, setSignedIn] = useState(isSignedIn());
@@ -29,7 +29,15 @@ const Index = () => {
   if (showOnboarding) {
     return (
       <div className="min-h-screen w-full max-w-[430px] mx-auto relative app-shell overflow-hidden shadow-vacation md:my-6 md:min-h-[calc(100vh-3rem)] md:rounded-[2rem]">
-        <ProfileScreen isOnboarding onComplete={() => setShowOnboarding(false)} />
+        <ProfileScreen
+          isOnboarding
+          onComplete={() => {
+            setShowOnboarding(false);
+            if (getProfile().travelMode === "solo") {
+              setActiveTab("buddies");
+            }
+          }}
+        />
       </div>
     );
   }
