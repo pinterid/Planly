@@ -75,6 +75,7 @@ export interface GroupWithPrefs {
 const PROFILE_KEY = "planly_profile";
 const GROUPS_KEY = "planly_groups";
 const MATCHES_KEY = "planly_matches";
+const SESSION_KEY = "planly_signed_in";
 
 const defaultProfile: UserProfile = {
   id: "self",
@@ -110,6 +111,24 @@ export const saveProfile = (profile: UserProfile) => {
 
 export const isOnboardingComplete = (): boolean => {
   return getProfile().onboardingComplete;
+};
+
+export const isSignedIn = (): boolean => {
+  return localStorage.getItem(SESSION_KEY) === "true";
+};
+
+export const logIn = (name?: string) => {
+  const profile = getProfile();
+  if (name?.trim() && !profile.name) {
+    saveProfile({ ...profile, name: name.trim() });
+  }
+  localStorage.setItem(SESSION_KEY, "true");
+};
+
+export const signIn = logIn;
+
+export const signOut = () => {
+  localStorage.removeItem(SESSION_KEY);
 };
 
 // Groups
@@ -151,7 +170,7 @@ const defaultGroups: GroupWithPrefs[] = [
     chat: [
       { id: "c1", memberId: "m1", memberName: "David", text: "Did you see the photos from the trip to Venice?", ts: Date.now() - 1000 * 60 * 60 * 6 },
       { id: "c2", memberId: "m2", memberName: "Tobias", text: "Yeah, looks like they found the best food spots without even trying.", ts: Date.now() - 1000 * 60 * 60 * 5 },
-      { id: "c3", memberId: "ai", memberName: "Planly AI", text: "I can summarise the trip ideas you've collected so far — just hit Start voting and I'll line up matching destinations.", ts: Date.now() - 1000 * 60 * 60 * 4, isAI: true },
+      { id: "c3", memberId: "ai", memberName: "Planly AI", text: "I can summarise the trip ideas you've collected so far. Start voting when you're ready, and I'll line up suggested destinations.", ts: Date.now() - 1000 * 60 * 60 * 4, isAI: true },
     ],
   },
 ];
@@ -187,7 +206,7 @@ export const addGroup = (name: string): GroupWithPrefs => {
     ],
     trips: [],
     chat: [
-      { id: `c${Date.now()}`, memberId: "ai", memberName: "Planly AI", text: "Group created. Invite your travel buddies and I'll start lining up trip ideas.", ts: Date.now(), isAI: true },
+      { id: `c${Date.now()}`, memberId: "ai", memberName: "Planly AI", text: "Group created. Invite your travel buddies and I'll help structure suggested trip ideas.", ts: Date.now(), isAI: true },
     ],
   };
   groups.push(newGroup);

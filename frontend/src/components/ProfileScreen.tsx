@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Check, ChevronRight, User, Save, Users as UsersIcon, UserPlus } from "lucide-react";
+import { Check, ChevronRight, User, Save, Users as UsersIcon, UserPlus, LogOut } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
 import {
@@ -27,9 +27,10 @@ const AVATARS = ["🧳", "👩‍💼", "🧑‍💻", "🎨", "👨‍👩‍�
 interface ProfileScreenProps {
   isOnboarding?: boolean;
   onComplete?: () => void;
+  onSignOut?: () => void;
 }
 
-const ProfileScreen = ({ isOnboarding = false, onComplete }: ProfileScreenProps) => {
+const ProfileScreen = ({ isOnboarding = false, onComplete, onSignOut }: ProfileScreenProps) => {
   const [profile, setProfile] = useState<UserProfile>(getProfile);
   const [step, setStep] = useState(0);
 
@@ -60,7 +61,7 @@ const ProfileScreen = ({ isOnboarding = false, onComplete }: ProfileScreenProps)
     { title: "Budget", subtitle: "What's your range?" },
     { title: "Duration & Weather", subtitle: "When you go, how warm?" },
     { title: "Travel No-gos", subtitle: "Things to avoid" },
-    { title: "Health & Comfort", subtitle: "Help us match you better" },
+    { title: "Health & Comfort", subtitle: "Help Planly suggest better options" },
   ];
 
   if (isOnboarding) {
@@ -347,10 +348,19 @@ const ProfileScreen = ({ isOnboarding = false, onComplete }: ProfileScreenProps)
 
         <button
           onClick={() => { saveProfile(profile); toast.success("Profile saved!"); }}
-          className="w-full py-3 rounded-xl gradient-coral text-primary-foreground font-heading font-semibold flex items-center justify-center gap-2 shadow-card"
+          className="w-full py-3 rounded-2xl bg-navy text-primary-foreground font-heading font-semibold flex items-center justify-center gap-2 shadow-card"
         >
-          <Save size={18} /> Save Profile
+          <Save size={18} /> Save profile
         </button>
+
+        {onSignOut && (
+          <button
+            onClick={onSignOut}
+            className="w-full py-3 rounded-2xl bg-white/80 border border-border text-foreground font-heading font-semibold flex items-center justify-center gap-2 shadow-card"
+          >
+            <LogOut size={18} /> Log out
+          </button>
+        )}
       </div>
     </div>
   );

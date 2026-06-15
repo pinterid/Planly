@@ -5,16 +5,30 @@ import HomeScreen from "@/components/HomeScreen";
 import BuddiesScreen from "@/components/BuddiesScreen";
 import GroupPlanningScreen from "@/components/GroupPlanningScreen";
 import ProfileScreen from "@/components/ProfileScreen";
-import { isOnboardingComplete } from "@/data/profileStore";
+import LoginScreen from "@/components/LoginScreen";
+import { isOnboardingComplete, isSignedIn, logIn, signOut } from "@/data/profileStore";
 
 const Index = () => {
+  const [signedIn, setSignedIn] = useState(isSignedIn());
   const [activeTab, setActiveTab] = useState<Tab>("home");
   const [showOnboarding, setShowOnboarding] = useState(!isOnboardingComplete());
   const [initialGroupId, setInitialGroupId] = useState<string | null>(null);
 
+  if (!signedIn) {
+    return (
+      <LoginScreen
+        onLogIn={(name) => {
+          logIn(name);
+          setSignedIn(true);
+          setShowOnboarding(!isOnboardingComplete());
+        }}
+      />
+    );
+  }
+
   if (showOnboarding) {
     return (
-      <div className="min-h-screen max-w-md mx-auto relative">
+      <div className="min-h-screen w-full max-w-[430px] mx-auto relative app-shell overflow-hidden shadow-vacation md:my-6 md:min-h-[calc(100vh-3rem)] md:rounded-[2rem]">
         <ProfileScreen isOnboarding onComplete={() => setShowOnboarding(false)} />
       </div>
     );
@@ -39,12 +53,19 @@ const Index = () => {
           />
         );
       case "profile":
-        return <ProfileScreen />;
+        return (
+          <ProfileScreen
+            onSignOut={() => {
+              signOut();
+              setSignedIn(false);
+            }}
+          />
+        );
     }
   };
 
   return (
-    <div className="min-h-screen max-w-md mx-auto relative pb-20">
+    <div className="min-h-screen w-full max-w-[430px] mx-auto relative pb-20 app-shell overflow-hidden shadow-vacation md:my-6 md:min-h-[calc(100vh-3rem)] md:rounded-[2rem]">
       <AnimatePresence mode="wait">
         <motion.div
           key={activeTab}
