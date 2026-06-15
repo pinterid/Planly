@@ -1,16 +1,16 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, CheckCircle2, Lock, Mail, Map, Palmtree, Users } from "lucide-react";
-import barcelonaImg from "@/assets/trip-barcelona.jpg";
+import { Lock, Mail, Palmtree, UsersRound, Scale, CheckCircle2 } from "lucide-react";
+import lisbonImg from "@/assets/trip-lisbon.jpg";
 
 interface LoginScreenProps {
   onLogIn: (name?: string) => void;
 }
 
 const valuePoints = [
-  { icon: Users, label: "Connect", text: "Find people with a similar travel rhythm." },
-  { icon: CheckCircle2, label: "Vote", text: "Let every group member choose clearly." },
-  { icon: Map, label: "Plan", text: "Turn preferences into one suggested plan." },
+  { label: "Match", icon: UsersRound },
+  { label: "Compare", icon: Scale },
+  { label: "Decide", icon: CheckCircle2 },
 ];
 
 const LoginScreen = ({ onLogIn }: LoginScreenProps) => {
@@ -29,10 +29,10 @@ const LoginScreen = ({ onLogIn }: LoginScreenProps) => {
         transition={{ duration: 0.35 }}
         className="relative z-10 px-5 pt-5 pb-4 min-h-screen flex flex-col"
       >
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-[1.15rem] bg-navy text-white flex items-center justify-center shadow-card">
-              <Palmtree size={19} />
+            <div className="w-10 h-10 rounded-[1.15rem] bg-white text-primary flex items-center justify-center shadow-card border border-border">
+              <Palmtree size={18} />
             </div>
             <span className="font-heading text-xl font-extrabold tracking-tight">Planly</span>
           </div>
@@ -44,52 +44,43 @@ const LoginScreen = ({ onLogIn }: LoginScreenProps) => {
           </button>
         </div>
 
-        <div className="relative mb-6">
+        <div className="relative mb-4">
           <div className="relative overflow-hidden rounded-[2rem] h-[14rem] shadow-vacation">
-            <img src={barcelonaImg} alt="Barcelona coast" className="absolute inset-0 w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-b from-foreground/0 via-foreground/5 to-foreground/70" />
-            <div className="absolute left-4 right-4 bottom-4 rounded-[1.35rem] bg-white/90 backdrop-blur-xl p-4 shadow-card">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-teal">Group decision</p>
-                  <h2 className="font-heading text-lg font-extrabold mt-1">Barcelona fits 92%</h2>
-                </div>
-                <div className="w-12 h-12 rounded-2xl bg-teal text-white flex items-center justify-center font-heading font-extrabold">
-                  92
-                </div>
-              </div>
-              <div className="mt-3 grid grid-cols-3 gap-2">
-                {["Budget", "Dates", "Vibe"].map((item) => (
-                  <div key={item} className="rounded-xl bg-secondary px-2.5 py-2">
-                    <p className="text-[10px] text-muted-foreground">{item}</p>
-                    <p className="text-xs font-bold text-foreground">Aligned</p>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <img src={lisbonImg} alt="Sunlit Lisbon street" className="absolute inset-0 w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-b from-white/0 via-white/0 to-foreground/20" />
           </div>
         </div>
 
-        <div className="mb-5">
-          <h1 className="font-heading text-[2rem] font-extrabold leading-[1.02] tracking-tight">
-            Plan trips together, without the chaos.
+        <div className="mb-7">
+          {/* <div className="mb-3 inline-flex items-center rounded-full bg-white/85 border border-border px-3 py-1.5 text-[11px] font-bold text-primary shadow-card">
+            Travel better together
+          </div> */}
+          <h1 className="font-heading text-[2.2rem] font-extrabold leading-[1.04] tracking-tight text-foreground">
+            Plan less,
+            <br />
+            <span className="text-primary">travel more.</span>
           </h1>
-          <p className="text-sm text-muted-foreground mt-3 leading-6">
-            Planly helps groups compare preferences, vote on destinations, and agree on one trip.
+          <p className="text-sm text-muted-foreground mt-3 leading-6 max-w-[20rem]">
+            Find new Buddies, plan trips together and travel with confidence.
           </p>
         </div>
 
-        <div className="grid grid-cols-3 gap-2 mb-5">
-          {valuePoints.map((point) => (
-            <div key={point.label} className="rounded-2xl bg-white/80 border border-white/70 p-3 shadow-card">
-              <point.icon size={16} className="text-teal mb-2" />
-              <p className="font-heading text-xs font-extrabold">{point.label}</p>
-              <p className="text-[10px] leading-4 text-muted-foreground mt-1">{point.text}</p>
+        <div className="grid grid-cols-3 gap-2 mb-4">
+          {valuePoints.map(({ label, icon: Icon }) => (
+            <div
+              key={label}
+              className="rounded-2xl bg-accent-soft border border-primary/15 px-3 py-2.5 shadow-card flex flex-col items-center justify-center text-center"           >
+              <div className="w-7 h-7 rounded-full bg-white text-primary flex items-center justify-center mb-1.5 shadow-sm">
+                <Icon size={15} strokeWidth={2.4} />
+              </div>
+              <p className="text-xs font-extrabold text-foreground leading-none">
+                {label}
+              </p>
             </div>
           ))}
         </div>
 
-        <div className="space-y-3">
+        <div className="flex flex-col gap-3">
           <label className="login-field">
             <Mail size={18} className="text-teal" />
             <input
@@ -114,9 +105,9 @@ const LoginScreen = ({ onLogIn }: LoginScreenProps) => {
 
         <button
           onClick={() => onLogIn(nameFromEmail)}
-          className="w-full mt-4 py-4 rounded-2xl gradient-coral text-primary-foreground font-heading font-extrabold flex items-center justify-center gap-2 shadow-vacation"
+          className="w-full mt-4 py-4 rounded-2xl bg-navy text-primary-foreground font-heading font-extrabold flex items-center justify-center shadow-vacation"
         >
-          Log in <ArrowRight size={18} />
+          Log in
         </button>
 
         <button
