@@ -58,6 +58,7 @@ const Index = () => {
           <GroupPlanningScreen
             initialGroupId={initialGroupId}
             onGroupOpened={() => setInitialGroupId(null)}
+            onOpenProfile={() => setActiveTab("profile")}
           />
         );
       case "profile":

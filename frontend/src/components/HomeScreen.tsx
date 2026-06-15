@@ -64,12 +64,9 @@ const HomeScreen = ({ onOpenGroup, onGoTo }: HomeScreenProps) => {
             <MapPinned size={21} />
           </div>
           <div>
-            <h2 className="font-heading text-3xl font-extrabold leading-tight">
+            <h3 className="font-heading text-3xl font-extrabold leading-tight">
               Ready to travel?
-            </h2>
-            <p className="mt-2 text-sm text-white/85 leading-5">
-              Find buddies, plan trips together, and compare ideas in one place.
-            </p>
+            </h3>
           </div>
         </div>
       </div>

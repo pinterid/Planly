@@ -21,6 +21,9 @@ import {
   Send,
   Bot,
   Video,
+  AlertTriangle,
+  CheckCircle2,
+  Info,
 } from "lucide-react";
 import {
   getGroups,
@@ -32,11 +35,6 @@ import {
   ChatMessage,
   ScoredTrip,
   scoreTripsForGroup,
-  ACTIVITY_OPTIONS,
-  DIETARY_OPTIONS,
-  MOBILITY_OPTIONS,
-  BUDGET_OPTIONS,
-  NOGO_OPTIONS,
 } from "@/data/profileStore";
 import VideoChatMock from "@/components/VideoChatMock";
 import { toast } from "sonner";
@@ -44,9 +42,10 @@ import { toast } from "sonner";
 interface Props {
   initialGroupId?: string | null;
   onGroupOpened?: () => void;
+  onOpenProfile?: () => void;
 }
 
-const GroupPlanningScreen = ({ initialGroupId, onGroupOpened }: Props) => {
+const GroupPlanningScreen = ({ initialGroupId, onGroupOpened, onOpenProfile }: Props) => {
   const [groups, setGroups] = useState<GroupWithPrefs[]>(getGroups);
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(initialGroupId ?? null);
   const [showNewGroup, setShowNewGroup] = useState(false);
@@ -74,9 +73,14 @@ const GroupPlanningScreen = ({ initialGroupId, onGroupOpened }: Props) => {
         group={selectedGroup}
         onBack={() => { setSelectedGroupId(null); refresh(); }}
         onUpdate={refresh}
+        onOpenProfile={onOpenProfile}
       />
     );
   }
+
+  const activeGroups = groups.length;
+  const openVotes = groups.filter((g) => !g.decidedTrip && g.trips.some((t) => t.votes.some((v) => v.vote === null))).length;
+  const suggestionsReady = groups.filter((g) => g.trips.length > 0).length;
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="px-4 pt-4 pb-4">
@@ -84,8 +88,22 @@ const GroupPlanningScreen = ({ initialGroupId, onGroupOpened }: Props) => {
         <Users size={22} className="text-primary" /> Groups
       </h1>
 
-
-
+      <section className="bg-card rounded-2xl p-4 shadow-card mb-4">
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <div>
+            <p className="font-heading font-bold text-sm">Planning overview</p>
+            <p className="text-xs text-muted-foreground mt-1">Collect preferences, compare suggestions and decide together.</p>
+          </div>
+          <div className="w-10 h-10 rounded-2xl bg-teal-light text-teal flex items-center justify-center">
+            <Info size={18} />
+          </div>
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          <OverviewStat value={String(activeGroups)} label={activeGroups === 1 ? "active group" : "active groups"} />
+          <OverviewStat value={String(openVotes)} label={openVotes === 1 ? "open vote" : "open votes"} />
+          <OverviewStat value={suggestionsReady > 0 ? "Ready" : "None"} label="AI suggestions ready" />
+        </div>
+      </section>
 
       <div className="space-y-3">
         {groups.map((g) => (
@@ -136,14 +154,84 @@ const GroupPlanningScreen = ({ initialGroupId, onGroupOpened }: Props) => {
 
 type View = "overview" | "member-prefs" | "add-member" | "voting" | "result" | "no-match" | "chat" | "videochat";
 
+const unique = (items: string[]) => Array.from(new Set(items.filter(Boolean)));
+
+const getSharedPreferences = (group: GroupWithPrefs) => {
+  const preferences = unique(group.members.flatMap((member) => member.preferences));
+  return preferences.length ? preferences.slice(0, 8) : ["Culture", "Good Food", "Walking tours"];
+};
+
+const getPreferenceConflicts = (group: GroupWithPrefs) => {
+  const conflicts: string[] = [];
+  const budgets = unique(group.members.map((member) => member.budgetRange).filter(Boolean));
+  const preferences = group.members.flatMap((member) => member.preferences).map((item) => item.toLowerCase());
+  const dislikes = group.members.flatMap((member) => member.dislikes).map((item) => item.toLowerCase());
+
+  if (budgets.length > 1) conflicts.push("Budget range differs between members.");
+  if (preferences.some((item) => item.includes("night")) && dislikes.some((item) => item.includes("night"))) {
+    conflicts.push("Some members prefer quiet places, others prefer nightlife.");
+  }
+  if (dislikes.some((item) => item.includes("long flight"))) {
+    conflicts.push("Long flights are marked as a no-go.");
+  }
+
+  return conflicts;
+};
+
+const getTripExplanation = (group: GroupWithPrefs, trip: ScoredTrip) => {
+  const sharedPreferences = getSharedPreferences(group);
+  const matched = unique([
+    ...sharedPreferences.filter((pref) =>
+      `${trip.travelStyle} ${trip.activities.join(" ")} ${trip.name}`.toLowerCase().includes(pref.toLowerCase())
+    ),
+    "May-June",
+    `${trip.durationDays} days`,
+  ]).slice(0, 4);
+  const lowFitMember = Object.entries(trip.breakdown).find(([, score]) => score < 65);
+  const compromise = lowFitMember
+    ? `Budget or style may need adjustment for ${lowFitMember[0]}.`
+    : "Budget is slightly above one member's preferred range.";
+
+  return {
+    matched: matched.length ? matched : ["Culture", "Good Food", "May-June", `${trip.durationDays} days`],
+    compromise,
+  };
+};
+
+const OverviewStat = ({ value, label }: { value: string; label: string }) => (
+  <div className="rounded-2xl bg-secondary px-2 py-3 text-center">
+    <p className="font-heading text-sm font-extrabold text-foreground">{value}</p>
+    <p className="mt-0.5 text-[10px] font-semibold leading-3 text-muted-foreground">{label}</p>
+  </div>
+);
+
+const DisplayChips = ({ items, tone = "neutral" }: { items: string[]; tone?: "neutral" | "warning" | "teal" }) => {
+  const classes = {
+    neutral: "bg-secondary text-secondary-foreground",
+    warning: "bg-warning-light text-warning",
+    teal: "bg-teal-light text-teal",
+  };
+  return (
+    <div className="flex flex-wrap gap-2">
+      {items.map((item) => (
+        <span key={item} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${classes[tone]}`}>
+          {item}
+        </span>
+      ))}
+    </div>
+  );
+};
+
 const GroupDetail = ({
   group,
   onBack,
   onUpdate,
+  onOpenProfile,
 }: {
   group: GroupWithPrefs;
   onBack: () => void;
   onUpdate: () => void;
+  onOpenProfile?: () => void;
 }) => {
   // Auto-open voting if there are trips with pending votes
   const initialView: View =
@@ -177,18 +265,10 @@ const GroupDetail = ({
 
   if (view === "member-prefs" && editingMember) {
     return (
-      <MemberPrefsEditor
+      <MemberTravelProfile
         member={editingMember}
-        onSave={(updated) => {
-          persist((g) => {
-            const idx = g.members.findIndex((m) => m.memberId === updated.memberId);
-            if (idx >= 0) g.members[idx] = updated;
-          });
-          setEditingMember(null);
-          setView("overview");
-          toast.success(`${updated.memberName}'s preferences updated`);
-        }}
         onBack={() => { setEditingMember(null); setView("overview"); }}
+        onOpenProfile={onOpenProfile}
       />
     );
   }
@@ -260,7 +340,7 @@ const GroupDetail = ({
 
   if (view === "result") {
     const decided = group.trips.find((t) => t.name === group.decidedTrip) || group.trips[0];
-    return <ResultView trip={decided} groupName={group.name} onBack={() => setView("overview")} />;
+    return <ResultView trip={decided} groupName={group.name} group={group} onBack={() => setView("overview")} />;
   }
 
   if (view === "no-match") {
@@ -300,11 +380,11 @@ const GroupDetail = ({
     const profile = JSON.parse(localStorage.getItem("planly_profile") || "{}");
     const others = group.members
       .filter((m) => m.memberId !== "self" && m.memberId !== "ai")
-      .map((m) => ({ id: m.memberId, name: m.memberName, avatar: "🙂" }));
+      .map((m) => ({ id: m.memberId, name: m.memberName, avatar: m.memberName.slice(0, 2).toUpperCase() }));
     return (
       <VideoChatMock
-        self={{ name: profile.name?.split(" ")[0] || "You", avatar: profile.avatar || "🙂" }}
-        participants={others.length ? others : [{ id: "x", name: "Waiting…", avatar: "⏳" }]}
+        self={{ name: profile.name?.split(" ")[0] || "You", avatar: (profile.name || "You").slice(0, 2).toUpperCase() }}
+        participants={others.length ? others : [{ id: "x", name: "Waiting", avatar: "WT" }]}
         onEnd={() => {
           addChatMessage(group.id, {
             memberId: "ai",
@@ -326,6 +406,8 @@ const GroupDetail = ({
     navigator.clipboard.writeText(inviteLink);
     toast.success("Invite link copied!");
   };
+  const sharedPreferences = getSharedPreferences(group);
+  const conflicts = getPreferenceConflicts(group);
 
   return (
     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="px-4 pt-4 pb-4">
@@ -346,7 +428,7 @@ const GroupDetail = ({
             onClick={() => { setEditingMember(m); setView("member-prefs"); }}
             className="w-full bg-card rounded-xl p-3 shadow-card flex items-center gap-3 text-left"
           >
-            <div className="w-10 h-10 rounded-full bg-coral-light flex items-center justify-center text-lg">👤</div>
+            <div className="w-10 h-10 rounded-full bg-coral-light text-primary flex items-center justify-center"><Users size={18} /></div>
             <div className="flex-1 min-w-0">
               <p className="font-heading font-semibold text-sm">{m.memberName}</p>
               <p className="text-xs text-muted-foreground truncate">
@@ -357,6 +439,52 @@ const GroupDetail = ({
           </button>
         ))}
       </div>
+
+      <section className="bg-card rounded-2xl p-4 shadow-card mb-3">
+        <div className="flex items-start gap-3 mb-3">
+          <div className="w-9 h-9 rounded-2xl bg-secondary text-primary flex items-center justify-center">
+            <CheckCircle2 size={18} />
+          </div>
+          <div>
+            <p className="font-heading font-bold text-sm">Shared preferences</p>
+            <p className="text-xs text-muted-foreground mt-1">Based on preferences shared by the group.</p>
+          </div>
+        </div>
+        <DisplayChips items={sharedPreferences} />
+      </section>
+
+      <section className="bg-card rounded-2xl p-4 shadow-card mb-3">
+        <div className="flex items-start gap-3 mb-3">
+          <div className="w-9 h-9 rounded-2xl bg-warning-light text-warning flex items-center justify-center">
+            <AlertTriangle size={18} />
+          </div>
+          <div>
+            <p className="font-heading font-bold text-sm">Preference conflicts</p>
+            <p className="text-xs text-muted-foreground mt-1">Potential tradeoffs to discuss before voting.</p>
+          </div>
+        </div>
+        {conflicts.length ? (
+          <DisplayChips items={conflicts} tone="warning" />
+        ) : (
+          <p className="rounded-2xl bg-secondary px-3 py-2 text-sm font-semibold text-secondary-foreground">
+            No major conflicts found.
+          </p>
+        )}
+      </section>
+
+      <section className="bg-teal-light rounded-2xl p-4 mb-4 border border-teal/10">
+        <div className="flex items-start gap-3">
+          <div className="w-9 h-9 rounded-2xl bg-white text-teal flex items-center justify-center">
+            <Bot size={18} />
+          </div>
+          <div>
+            <p className="font-heading font-bold text-sm text-foreground">Planly AI</p>
+            <p className="text-sm leading-6 text-foreground mt-1">
+              I can compare your shared preferences and suggest destinations that balance the group.
+            </p>
+          </div>
+        </div>
+      </section>
 
       <div className="grid grid-cols-2 gap-2 mb-3">
         <button
@@ -430,6 +558,7 @@ const VotingView = ({
   onFinish: () => void;
 }) => {
   const allVoted = group.trips.every((t) => t.votes.find((v) => v.memberId === "self")?.vote !== null);
+  const [expandedTrip, setExpandedTrip] = useState<string | null>(null);
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="px-4 pt-4 pb-4">
@@ -445,6 +574,8 @@ const VotingView = ({
       <div className="space-y-3">
         {group.trips.map((trip) => {
           const myVote = trip.votes.find((v) => v.memberId === "self")?.vote;
+          const explanation = getTripExplanation(group, trip);
+          const isExpanded = expandedTrip === trip.name;
           return (
             <div key={trip.name} className="bg-card rounded-xl p-4 shadow-card">
               <div className="flex items-start justify-between mb-2">
@@ -469,13 +600,34 @@ const VotingView = ({
                 <p>Style: {trip.travelStyle}</p>
               </div>
 
+              <button
+                onClick={() => setExpandedTrip(isExpanded ? null : trip.name)}
+                className="w-full mb-3 rounded-xl bg-teal-light px-3 py-2 text-left text-xs font-heading font-bold text-teal flex items-center justify-between"
+              >
+                Why this score?
+                <ChevronRight size={14} className={`transition-transform ${isExpanded ? "rotate-90" : ""}`} />
+              </button>
+
+              {isExpanded && (
+                <div className="mb-3 rounded-2xl border border-border bg-secondary p-3 space-y-3">
+                  <div>
+                    <p className="text-xs font-heading font-bold text-foreground mb-2">Matched preferences</p>
+                    <DisplayChips items={explanation.matched} tone="teal" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-heading font-bold text-foreground mb-1">Compromise / unmet preferences</p>
+                    <p className="text-xs leading-5 text-muted-foreground">{explanation.compromise}</p>
+                  </div>
+                </div>
+              )}
+
               {myVote ? (
                 <div className={`text-xs font-medium px-3 py-2 rounded-lg text-center ${
                   myVote === "yes" ? "bg-teal-light text-teal" :
                   myVote === "no" ? "bg-coral-light text-coral" :
                   "bg-secondary text-muted-foreground"
                 }`}>
-                  {myVote === "yes" ? "✓ Let's do it" : myVote === "no" ? "✗ Not for me" : "🚫 No-go for me"}
+                  {myVote === "yes" ? "I\'m in" : myVote === "no" ? "Not for me" : "No-go for me"}
                 </div>
               ) : (
                 <>
@@ -484,7 +636,7 @@ const VotingView = ({
                       onClick={() => onVote(trip.name, "yes")}
                       className="py-2 rounded-lg bg-teal-light text-teal font-heading font-semibold text-sm flex items-center justify-center gap-1.5"
                     >
-                      <ThumbsUp size={14} /> Let's do it
+                      <ThumbsUp size={14} /> I'm in
                     </button>
                     <button
                       onClick={() => onVote(trip.name, "no")}
@@ -523,7 +675,7 @@ const NoMatchView = ({ onRetry, onBack }: { onRetry: () => void; onBack: () => v
       <ChevronLeft size={16} /> Back
     </button>
     <div className="bg-card rounded-2xl p-6 shadow-card text-center">
-      <div className="text-5xl mb-3">🤔</div>
+      <div className="w-12 h-12 rounded-2xl bg-teal-light text-teal flex items-center justify-center mx-auto mb-3"><RefreshCw size={22} /></div>
       <h2 className="font-heading text-xl font-bold mb-2">No clear winner yet</h2>
       <p className="text-sm text-muted-foreground mb-4">
         Your group's preferences differ a lot. Planly can suggest a new set of destinations based on this round's feedback.
@@ -541,7 +693,10 @@ const NoMatchView = ({ onRetry, onBack }: { onRetry: () => void; onBack: () => v
   </motion.div>
 );
 
-const ResultView = ({ trip, groupName, onBack }: { trip: ScoredTrip; groupName: string; onBack: () => void }) => (
+const ResultView = ({ trip, groupName, group, onBack }: { trip: ScoredTrip; groupName: string; group: GroupWithPrefs; onBack: () => void }) => {
+  const explanation = getTripExplanation(group, trip);
+
+  return (
   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="px-4 pt-4 pb-4">
     <button onClick={onBack} className="text-sm text-primary font-medium mb-4 flex items-center gap-1">
       <ChevronLeft size={16} /> Back
@@ -557,6 +712,29 @@ const ResultView = ({ trip, groupName, onBack }: { trip: ScoredTrip; groupName: 
     </div>
 
     <div className="space-y-3">
+      <section className="bg-teal-light rounded-2xl p-4 border border-teal/10">
+        <div className="flex items-start gap-3">
+          <div className="w-9 h-9 rounded-2xl bg-white text-teal flex items-center justify-center">
+            <Sparkles size={18} />
+          </div>
+          <div>
+            <p className="font-heading font-bold text-sm">Why this plan?</p>
+            <p className="mt-1 text-sm leading-6 text-foreground">
+              {trip.name} had the highest group fit and no hard no-go conflict.
+            </p>
+          </div>
+        </div>
+        <div className="mt-4 space-y-3">
+          <div>
+            <p className="text-xs font-heading font-bold mb-2">Matched preferences</p>
+            <DisplayChips items={explanation.matched} tone="teal" />
+          </div>
+          <div>
+            <p className="text-xs font-heading font-bold mb-1">Remaining compromise</p>
+            <p className="text-xs leading-5 text-foreground">{explanation.compromise}</p>
+          </div>
+        </div>
+      </section>
       <OverviewRow icon={<Hotel size={18} />} label="Hotel" value={trip.hotel} />
       <OverviewRow icon={<Calendar size={18} />} label="Check-in" value={`${trip.checkIn} 16:00`} />
       <OverviewRow icon={<Calendar size={18} />} label="Check-out" value={`${trip.checkOut} 11:00`} />
@@ -587,7 +765,8 @@ const ResultView = ({ trip, groupName, onBack }: { trip: ScoredTrip; groupName: 
       </div>
     </div>
   </motion.div>
-);
+  );
+};
 
 const OverviewRow = ({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) => (
   <div className="bg-card rounded-xl p-3 shadow-card flex items-center gap-3">
@@ -599,40 +778,72 @@ const OverviewRow = ({ icon, label, value }: { icon: React.ReactNode; label: str
   </div>
 );
 
-const MemberPrefsEditor = ({
-  member, onSave, onBack,
-}: { member: GroupMemberPrefs; onSave: (m: GroupMemberPrefs) => void; onBack: () => void }) => {
-  const [prefs, setPrefs] = useState({ ...member });
-  const toggle = (field: keyof GroupMemberPrefs, value: string) => {
-    setPrefs((prev) => {
-      const arr = prev[field] as string[];
-      const next = arr.includes(value) ? arr.filter((v) => v !== value) : [...arr, value];
-      return { ...prev, [field]: next };
-    });
-  };
+const MemberTravelProfile = ({
+  member,
+  onBack,
+  onOpenProfile,
+}: {
+  member: GroupMemberPrefs;
+  onBack: () => void;
+  onOpenProfile?: () => void;
+}) => {
+  const isCurrentUser = member.memberId === "self";
+  const title = isCurrentUser ? "Your travel profile" : `${member.memberName}'s travel profile`;
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="px-4 pt-4 pb-4">
       <button onClick={onBack} className="text-sm text-primary font-medium mb-4 flex items-center gap-1">
         <ChevronLeft size={16} /> Back
       </button>
-      <h2 className="font-heading text-xl font-bold mb-1">{prefs.memberName}'s Preferences</h2>
-      <p className="text-sm text-muted-foreground mb-5">These shape Planly AI suggestions</p>
-
-      <div className="space-y-5">
-        <Chips label="Likes & Interests" options={ACTIVITY_OPTIONS} selected={prefs.preferences} onToggle={(v) => toggle("preferences", v)} />
-        <Chips label="Dislikes & No-gos" options={[...NOGO_OPTIONS, "Night life", "Extreme sports", "Hot climate", "Cold climate"]} selected={prefs.dislikes} onToggle={(v) => toggle("dislikes", v)} />
-        <Single label="Budget" options={BUDGET_OPTIONS} selected={prefs.budgetRange} onSelect={(v) => setPrefs((p) => ({ ...p, budgetRange: v }))} />
-        <Single label="Mobility" options={MOBILITY_OPTIONS} selected={prefs.mobilityLevel} onSelect={(v) => setPrefs((p) => ({ ...p, mobilityLevel: v }))} />
-        <Chips label="Dietary Needs" options={DIETARY_OPTIONS} selected={prefs.dietaryNeeds} onToggle={(v) => toggle("dietaryNeeds", v)} />
+      <div className="bg-card rounded-2xl p-4 shadow-card mb-4">
+        <div className="flex items-start gap-3">
+          <div className="w-12 h-12 rounded-2xl bg-coral-light text-primary flex items-center justify-center font-heading font-bold">
+            {member.memberName.slice(0, 2).toUpperCase()}
+          </div>
+          <div className="flex-1">
+            <h2 className="font-heading text-xl font-bold mb-1">{title}</h2>
+            <p className="text-sm text-muted-foreground">
+              {isCurrentUser ? "Edit your preferences in Profile." : "Shared preferences used for group planning."}
+            </p>
+          </div>
+        </div>
+        {isCurrentUser && onOpenProfile && (
+          <button
+            onClick={onOpenProfile}
+            className="mt-4 w-full py-3 rounded-xl bg-primary text-primary-foreground font-heading font-semibold"
+          >
+            Edit my profile
+          </button>
+        )}
       </div>
 
-      <button onClick={() => onSave(prefs)} className="w-full mt-6 py-3 rounded-xl gradient-coral text-primary-foreground font-heading font-semibold">
-        Save Preferences
-      </button>
+      <div className="space-y-3">
+        <ReadOnlyPreferenceSection label="Likes & interests" values={member.preferences} emptyText="No shared interests yet." />
+        <ReadOnlyPreferenceSection label="No-gos & dislikes" values={member.dislikes} emptyText="No shared no-gos." tone="warning" />
+        <ReadOnlyPreferenceSection label="Budget" values={member.budgetRange ? [member.budgetRange] : []} emptyText="Budget not shared." />
+        <ReadOnlyPreferenceSection label="Mobility" values={member.mobilityLevel ? [member.mobilityLevel] : []} emptyText="Mobility not shared." tone="teal" />
+        <ReadOnlyPreferenceSection label="Dietary needs" values={member.dietaryNeeds} emptyText="No dietary needs shared." />
+      </div>
     </motion.div>
   );
 };
+
+const ReadOnlyPreferenceSection = ({
+  label,
+  values,
+  emptyText,
+  tone = "neutral",
+}: {
+  label: string;
+  values: string[];
+  emptyText: string;
+  tone?: "neutral" | "warning" | "teal";
+}) => (
+  <section className="bg-card rounded-2xl p-4 shadow-card">
+    <p className="font-heading font-bold text-sm mb-3">{label}</p>
+    {values.length ? <DisplayChips items={values} tone={tone} /> : <p className="text-sm text-muted-foreground">{emptyText}</p>}
+  </section>
+);
 
 const AddMemberForm = ({ onSave, onBack }: { onSave: (name: string) => void; onBack: () => void }) => {
   const [name, setName] = useState("");
@@ -660,40 +871,6 @@ const AddMemberForm = ({ onSave, onBack }: { onSave: (name: string) => void; onB
     </motion.div>
   );
 };
-
-const Chips = ({ label, options, selected, onToggle }: { label?: string; options: string[]; selected: string[]; onToggle: (v: string) => void }) => (
-  <div>
-    {label && <label className="text-sm font-medium text-muted-foreground mb-2 block">{label}</label>}
-    <div className="flex flex-wrap gap-2">
-      {options.map((opt) => (
-        <button
-          key={opt}
-          onClick={() => onToggle(opt)}
-          className={`px-3 py-1.5 rounded-full text-sm font-medium ${selected.includes(opt) ? "gradient-coral text-primary-foreground" : "bg-secondary text-secondary-foreground"}`}
-        >
-          {opt}
-        </button>
-      ))}
-    </div>
-  </div>
-);
-
-const Single = ({ label, options, selected, onSelect }: { label?: string; options: string[]; selected: string; onSelect: (v: string) => void }) => (
-  <div>
-    {label && <label className="text-sm font-medium text-muted-foreground mb-2 block">{label}</label>}
-    <div className="flex flex-wrap gap-2">
-      {options.map((opt) => (
-        <button
-          key={opt}
-          onClick={() => onSelect(opt)}
-          className={`px-3 py-1.5 rounded-full text-sm font-medium ${selected === opt ? "gradient-coral text-primary-foreground" : "bg-secondary text-secondary-foreground"}`}
-        >
-          {opt}
-        </button>
-      ))}
-    </div>
-  </div>
-);
 
 const GroupChatView = ({
   group,
@@ -757,7 +934,7 @@ const GroupChatView = ({
                 <div className={`w-7 h-7 rounded-full flex items-center justify-center text-sm flex-shrink-0 ${
                   isAI ? "bg-teal text-primary-foreground" : "bg-coral-light"
                 }`}>
-                  {isAI ? <Bot size={14} /> : isSelf ? "🙂" : "👤"}
+                  {isAI ? <Bot size={14} /> : isSelf ? "YO" : m.memberName.slice(0, 2).toUpperCase()}
                 </div>
                 <div>
                   {!isSelf && (
