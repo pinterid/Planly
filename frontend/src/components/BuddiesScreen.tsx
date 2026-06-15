@@ -313,7 +313,7 @@ const BuddiesScreen = ({ onOpenGroup }: BuddiesScreenProps) => {
         </button>
         <div className="bg-card rounded-2xl p-6 shadow-card text-center">
           <Sparkles size={36} className="text-primary mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground">It's a match</p>
+          <p className="text-sm text-muted-foreground">Mutual interest</p>
           <div className="w-20 h-20 rounded-full bg-coral-light flex items-center justify-center text-4xl mx-auto my-3">
             {selected.avatar}
           </div>
@@ -368,7 +368,7 @@ const BuddiesScreen = ({ onOpenGroup }: BuddiesScreenProps) => {
                 {selected.name}, {selected.age}
               </h2>
               <p className="text-xs text-muted-foreground">
-                {compatibility(selected)}% travel-style match
+                Compatibility estimate: {compatibility(selected)}%
               </p>
             </div>
           </div>
@@ -402,7 +402,7 @@ const BuddiesScreen = ({ onOpenGroup }: BuddiesScreenProps) => {
               onClick={() => setView("matched-actions")}
               className="w-full py-3 rounded-xl gradient-coral text-primary-foreground font-heading font-semibold flex items-center justify-center gap-2"
             >
-              <Sparkles size={16} /> You matched — continue
+              <Sparkles size={16} /> Continue planning
             </button>
           ) : (
             <div className="grid grid-cols-2 gap-2">
@@ -434,7 +434,7 @@ const BuddiesScreen = ({ onOpenGroup }: BuddiesScreenProps) => {
         <Heart size={20} className="text-primary" fill="currentColor" /> Find travel buddies
       </h1>
       <p className="text-sm text-muted-foreground mb-4">
-        Browse profiles, match with multiple travelers, then plan together.
+        Browse profiles, compare compatibility estimates, then plan together.
       </p>
 
       {matchedTravelers.length > 0 && (
@@ -495,7 +495,7 @@ const BuddiesScreen = ({ onOpenGroup }: BuddiesScreenProps) => {
                     <p className="font-heading font-bold">{t.name}, {t.age}</p>
                     {status === "matched" && (
                       <span className="text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded bg-teal-light text-teal flex items-center gap-1">
-                        <CheckCircle2 size={10} /> Match
+                        <CheckCircle2 size={10} /> Mutual
                       </span>
                     )}
                     {status === "liked" && (
@@ -508,7 +508,7 @@ const BuddiesScreen = ({ onOpenGroup }: BuddiesScreenProps) => {
                     {t.style} · {t.budget} · {t.destination}
                   </p>
                   <div className="mt-1.5 h-1 bg-secondary rounded-full overflow-hidden">
-                    <div className="h-full gradient-coral" style={{ width: `${t.score}%` }} />
+                    <div className="h-full bg-teal" style={{ width: `${t.score}%` }} />
                   </div>
                 </div>
               </motion.button>

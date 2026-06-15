@@ -34,11 +34,11 @@ const VideoChatMock = ({ self, participants, onEnd, context }: VideoChatMockProp
     count === 1 ? "grid-cols-1" : count === 2 ? "grid-cols-1" : "grid-cols-2";
 
   return (
-    <div className="fixed inset-0 z-[60] bg-foreground text-background flex flex-col">
+    <div className="fixed inset-0 z-[60] bg-background text-foreground flex flex-col">
       {/* Top bar */}
-      <div className="flex items-center justify-between px-4 pt-4 pb-2 text-background">
+      <div className="flex items-center justify-between px-4 pt-4 pb-2 text-foreground">
         <div className="flex items-center gap-2 text-xs">
-          <span className="w-2 h-2 rounded-full bg-coral animate-pulse" />
+          <span className="w-2 h-2 rounded-full bg-teal animate-pulse" />
           <span className="font-medium">LIVE · {mm}:{ss}</span>
         </div>
         <div className="flex items-center gap-1 text-xs opacity-80">
@@ -47,7 +47,7 @@ const VideoChatMock = ({ self, participants, onEnd, context }: VideoChatMockProp
       </div>
 
       {context && (
-        <p className="px-4 pb-2 text-[11px] text-background/70 text-center">{context}</p>
+        <p className="px-4 pb-2 text-[11px] text-muted-foreground text-center">{context}</p>
       )}
 
       {/* Participant tiles */}
@@ -59,14 +59,14 @@ const VideoChatMock = ({ self, participants, onEnd, context }: VideoChatMockProp
 
       {/* Self preview */}
       {self && (
-        <div className="absolute bottom-28 right-4 w-24 h-32 rounded-xl overflow-hidden border-2 border-background/30 bg-foreground shadow-lg">
+        <div className="absolute bottom-28 right-4 w-24 h-32 rounded-xl overflow-hidden border-2 border-white bg-card shadow-lg">
           {cameraOff ? (
-            <div className="w-full h-full flex items-center justify-center bg-foreground/80 text-background text-3xl">
+            <div className="w-full h-full flex items-center justify-center bg-soft-blue text-foreground text-3xl">
               {self.avatar}
             </div>
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-teal/40 to-coral/40 flex items-end justify-center">
-              <div className="w-full bg-foreground/60 text-[10px] px-1.5 py-0.5 text-background flex items-center justify-between">
+            <div className="w-full h-full bg-gradient-to-br from-teal-light to-coral-light flex items-end justify-center">
+              <div className="w-full bg-white/80 text-[10px] px-1.5 py-0.5 text-foreground flex items-center justify-between">
                 <span className="truncate">{self.name}</span>
                 {muted && <MicOff size={10} />}
               </div>
@@ -77,10 +77,10 @@ const VideoChatMock = ({ self, participants, onEnd, context }: VideoChatMockProp
 
       {/* Controls */}
       <div className="px-6 pb-8 pt-4 flex items-center justify-center gap-4">
-        <ControlButton onClick={() => setMuted((m) => !m)} active={muted} activeClass="bg-coral">
+        <ControlButton onClick={() => setMuted((m) => !m)} active={muted} activeClass="bg-primary">
           {muted ? <MicOff size={20} /> : <Mic size={20} />}
         </ControlButton>
-        <ControlButton onClick={() => setCameraOff((c) => !c)} active={cameraOff} activeClass="bg-coral">
+        <ControlButton onClick={() => setCameraOff((c) => !c)} active={cameraOff} activeClass="bg-primary">
           {cameraOff ? <VideoOff size={20} /> : <Video size={20} />}
         </ControlButton>
         <ControlButton onClick={() => {}} active={false}>
@@ -88,7 +88,7 @@ const VideoChatMock = ({ self, participants, onEnd, context }: VideoChatMockProp
         </ControlButton>
         <button
           onClick={onEnd}
-          className="w-16 h-14 rounded-2xl bg-coral text-primary-foreground flex items-center justify-center shadow-lg"
+          className="w-16 h-14 rounded-2xl bg-destructive text-primary-foreground flex items-center justify-center shadow-lg"
           aria-label="End call"
         >
           <PhoneOff size={22} />
@@ -111,7 +111,7 @@ const ControlButton = ({
 }) => (
   <button
     onClick={onClick}
-    className={`w-12 h-12 rounded-full flex items-center justify-center ${active ? activeClass + " text-background" : "bg-background/15 text-background"}`}
+    className={`w-12 h-12 rounded-full flex items-center justify-center shadow-card ${active ? activeClass + " text-primary-foreground" : "bg-white text-foreground"}`}
   >
     {children}
   </button>
@@ -121,10 +121,10 @@ const ParticipantTile = ({ participant, large }: { participant: Participant; lar
   // Pseudo-random gradient by name
   const seed = participant.name.charCodeAt(0) + participant.name.charCodeAt(1 % participant.name.length);
   const gradients = [
-    "from-coral/60 to-amber/40",
-    "from-teal/60 to-coral-light/40",
-    "from-amber/60 to-teal/40",
-    "from-coral-light/60 to-teal/40",
+    "from-coral-light to-warning-light",
+    "from-teal-light to-coral-light",
+    "from-warning-light to-teal-light",
+    "from-coral-light to-soft-blue",
   ];
   const g = gradients[seed % gradients.length];
   return (
@@ -135,7 +135,7 @@ const ParticipantTile = ({ participant, large }: { participant: Participant; lar
     >
       <div className={`${large ? "text-7xl" : "text-5xl"}`}>{participant.avatar}</div>
       <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between text-background">
-        <span className="text-xs font-medium bg-foreground/50 px-2 py-0.5 rounded-md">
+        <span className="text-xs font-medium bg-white/75 text-foreground px-2 py-0.5 rounded-md">
           {participant.name}
         </span>
       </div>

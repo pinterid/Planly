@@ -112,7 +112,7 @@ const PlanScreen = () => {
             className="w-full py-3 rounded-xl gradient-coral text-primary-foreground font-heading font-semibold flex items-center justify-center gap-2 shadow-card hover:shadow-card-hover transition-shadow"
           >
             <Sparkles size={18} />
-            Find Trips
+            Find suggested trips
           </button>
         </motion.div>
       ) : (
@@ -125,12 +125,12 @@ const PlanScreen = () => {
           </button>
           {/* Likeness summary */}
           <div className="grid grid-cols-3 gap-2 mb-4">
-            <StatCard icon={<TrendingUp size={14} />} label="Avg match" value={`${avgLikeness}%`} />
+            <StatCard icon={<TrendingUp size={14} />} label="Avg fit" value={`${avgLikeness}%`} />
             <StatCard icon={<Star size={14} />} label="Top pick" value={topMatch.destination} />
             <StatCard icon={<Heart size={14} />} label="Liked by" value={`${topMatch.likes.toLocaleString()}`} />
           </div>
 
-          <h2 className="font-heading text-lg font-bold mb-4">Trip Options</h2>
+          <h2 className="font-heading text-lg font-bold mb-4">Suggested trips</h2>
           <div className="space-y-4">
             {tripOptions.map((trip, i) => (
               <motion.button
@@ -154,7 +154,7 @@ const PlanScreen = () => {
                   />
                   <div className="absolute top-2 left-2 px-2 py-1 rounded-full bg-background/90 backdrop-blur text-xs font-bold flex items-center gap-1">
                     <TrendingUp size={12} className="text-primary" />
-                    {trip.likeness}% match
+                    {trip.likeness}% estimated fit
                   </div>
                   <button
                     onClick={(e) => {
@@ -192,7 +192,7 @@ const PlanScreen = () => {
                   <div className="flex items-center gap-2">
                     <div className="flex-1 h-1.5 rounded-full bg-secondary overflow-hidden">
                       <div
-                        className="h-full gradient-coral"
+                        className="h-full bg-teal"
                         style={{ width: `${trip.likeness}%` }}
                       />
                     </div>
@@ -324,7 +324,7 @@ const TripDetailModal = ({
         </div>
 
         <button className="w-full py-3 rounded-xl gradient-coral text-primary-foreground font-heading font-semibold shadow-card">
-          Book this trip
+          Add to Suggested Plan
         </button>
       </div>
     </motion.div>

@@ -47,7 +47,7 @@ const MatchScreen = ({ onBack, onMatch, title, subtitle }: MatchScreenProps) => 
         )}
         <div className="bg-card rounded-2xl p-6 shadow-card text-center">
           <Sparkles size={36} className="text-primary mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground">It's a match!</p>
+          <p className="text-sm text-muted-foreground">Mutual interest</p>
           <div className="w-20 h-20 rounded-full bg-coral-light flex items-center justify-center text-4xl mx-auto my-3">
             {matched.avatar}
           </div>
@@ -55,7 +55,7 @@ const MatchScreen = ({ onBack, onMatch, title, subtitle }: MatchScreenProps) => 
             You and {matched.name} want to travel together
           </h2>
           <p className="text-sm text-muted-foreground mb-5">
-            Travel styles align — start planning together?
+            Your travel styles look compatible. Start planning together?
           </p>
           <button
             onClick={() => { onMatch(matched); setMatched(null); }}

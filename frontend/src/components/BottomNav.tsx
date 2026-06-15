@@ -17,8 +17,8 @@ const tabs = [
 
 const BottomNav = ({ active, onChange }: BottomNavProps) => {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border">
-      <div className="max-w-md mx-auto flex items-center justify-around h-16">
+    <nav className="fixed bottom-0 left-1/2 z-50 w-full max-w-[430px] -translate-x-1/2 bg-white/95 backdrop-blur-xl border-t border-border shadow-card md:bottom-6 md:rounded-t-[1.75rem] md:border">
+      <div className="mx-auto flex items-center justify-around h-[4.35rem]">
         {tabs.map((tab) => {
           const isActive = active === tab.id;
           return (
@@ -30,7 +30,7 @@ const BottomNav = ({ active, onChange }: BottomNavProps) => {
               {isActive && (
                 <motion.div
                   layoutId="nav-indicator"
-                  className="absolute -top-px left-2 right-2 h-0.5 gradient-coral rounded-full"
+                  className="absolute -top-px left-2 right-2 h-0.5 bg-primary rounded-full"
                   transition={{ type: "spring", stiffness: 500, damping: 35 }}
                 />
               )}

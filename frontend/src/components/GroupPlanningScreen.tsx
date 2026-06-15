@@ -286,7 +286,7 @@ const GroupDetail = ({
               memberId: "ai",
               memberName: "Planly AI",
               isAI: true,
-              text: "Got it — I'll factor that into the next round of suggestions.",
+              text: "Got it. I'll factor that into the next round of suggestions.",
             });
             onUpdate();
           }, 600);
@@ -310,7 +310,7 @@ const GroupDetail = ({
             memberId: "ai",
             memberName: "Planly AI",
             isAI: true,
-            text: "Group call ended. Want me to summarise what you agreed on?",
+            text: "Group call ended. Want me to summarise the points your group discussed?",
           });
           onUpdate();
           setView("overview");
@@ -335,7 +335,7 @@ const GroupDetail = ({
 
       <h1 className="font-heading text-xl font-bold mb-1">{group.name}</h1>
       {group.decidedTrip && (
-        <p className="text-sm text-teal font-medium mb-3">✓ Decided: {group.decidedTrip}</p>
+        <p className="text-sm text-teal font-medium mb-3">Suggested Plan: {group.decidedTrip}</p>
       )}
 
       <h3 className="font-heading font-semibold text-sm text-muted-foreground mb-2 mt-4">Members</h3>
@@ -395,14 +395,14 @@ const GroupDetail = ({
           onClick={() => setView("result")}
           className="w-full py-3 rounded-xl gradient-coral text-primary-foreground font-heading font-semibold flex items-center justify-center gap-2 shadow-card"
         >
-          <PartyPopper size={18} /> View Trip Overview
+          <PartyPopper size={18} /> View Suggested Plan
         </button>
       ) : (
         <button
           onClick={startVoting}
           className="w-full py-3 rounded-xl gradient-coral text-primary-foreground font-heading font-semibold flex items-center justify-center gap-2 shadow-card"
         >
-          <Sparkles size={18} /> Get AI Suggestions & Vote
+          <Sparkles size={18} /> Get Planly AI suggestions & vote
         </button>
       )}
 
@@ -452,9 +452,9 @@ const VotingView = ({
                   <h3 className="font-heading font-bold">
                     {trip.name}, {trip.country}
                   </h3>
-                  <p className="text-xs text-muted-foreground">AI score</p>
+                  <p className="text-xs text-muted-foreground">Estimated group fit</p>
                   <p className="text-sm font-medium">
-                    {trip.score}% match with your group
+                    {trip.score}% suggested fit for your group
                   </p>
                 </div>
                 <div className="text-right text-xs text-muted-foreground">
@@ -549,7 +549,7 @@ const ResultView = ({ trip, groupName, onBack }: { trip: ScoredTrip; groupName: 
 
     <div className="text-center mb-5">
       <PartyPopper size={36} className="text-primary mx-auto mb-2" />
-      <p className="text-sm text-muted-foreground">{groupName} · Final Trip</p>
+      <p className="text-sm text-muted-foreground">{groupName} · Suggested Plan</p>
       <h1 className="font-heading text-2xl font-bold flex items-center justify-center gap-2">
         <MapPin size={22} className="text-primary" /> {trip.name}
       </h1>
@@ -574,7 +574,7 @@ const ResultView = ({ trip, groupName, onBack }: { trip: ScoredTrip; groupName: 
       </div>
 
       <div className="bg-card rounded-xl p-4 shadow-card">
-        <p className="text-xs text-muted-foreground font-medium mb-2">Group compatibility</p>
+        <p className="text-xs text-muted-foreground font-medium mb-2">Estimated group fit</p>
         {Object.entries(trip.breakdown).map(([name, score]) => (
           <div key={name} className="flex items-center gap-3 mb-1.5 last:mb-0">
             <span className="text-xs w-16 truncate">{name}</span>
@@ -617,7 +617,7 @@ const MemberPrefsEditor = ({
         <ChevronLeft size={16} /> Back
       </button>
       <h2 className="font-heading text-xl font-bold mb-1">{prefs.memberName}'s Preferences</h2>
-      <p className="text-sm text-muted-foreground mb-5">These shape the AI's suggestions</p>
+      <p className="text-sm text-muted-foreground mb-5">These shape Planly AI suggestions</p>
 
       <div className="space-y-5">
         <Chips label="Likes & Interests" options={ACTIVITY_OPTIONS} selected={prefs.preferences} onToggle={(v) => toggle("preferences", v)} />
@@ -755,7 +755,7 @@ const GroupChatView = ({
             >
               <div className={`max-w-[80%] flex ${isSelf ? "flex-row-reverse" : "flex-row"} items-end gap-2`}>
                 <div className={`w-7 h-7 rounded-full flex items-center justify-center text-sm flex-shrink-0 ${
-                  isAI ? "gradient-coral text-primary-foreground" : "bg-coral-light"
+                  isAI ? "bg-teal text-primary-foreground" : "bg-coral-light"
                 }`}>
                   {isAI ? <Bot size={14} /> : isSelf ? "🙂" : "👤"}
                 </div>
@@ -769,7 +769,7 @@ const GroupChatView = ({
                     isSelf
                       ? "bg-primary text-primary-foreground rounded-br-sm"
                       : isAI
-                        ? "bg-amber-light text-foreground rounded-bl-sm"
+                        ? "bg-teal-light text-foreground rounded-bl-sm"
                         : "bg-card shadow-card text-foreground rounded-bl-sm"
                   }`}>
                     {m.text}
