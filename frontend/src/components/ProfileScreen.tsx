@@ -164,11 +164,11 @@ const ProfileScreen = ({ isOnboarding = false, onComplete, onSignOut }: ProfileS
           onEdit={() => setActiveEdit("basic")}
         />
 
-        <VerifyProfileCard />
+        {/* <VerifyProfileCard /> */}
 
-        <PublicProfilePreviewCard
+        {/* <PublicProfilePreviewCard
           onPreview={() => setPreviewOpen(true)}
-        />
+        /> */}
 
         <ProfileSectionCard
           icon={<User size={18} />}
@@ -362,23 +362,23 @@ const CompletenessCard = ({
   </section>
 );
 
-const VerifyProfileCard = () => (
-  <section className="bg-card rounded-2xl p-4 shadow-card flex items-center gap-3">
-    <div className="w-10 h-10 rounded-2xl bg-teal-light text-teal flex items-center justify-center">
-      <ShieldCheck size={18} />
-    </div>
-    <div className="flex-1 min-w-0">
-      <p className="font-heading font-bold text-sm">Verification</p>
-      <p className="text-xs text-muted-foreground">Prototype verification for future trust features.</p>
-    </div>
-    <button
-      onClick={() => toast.success("Verification request saved")}
-      className="rounded-full bg-secondary px-3 py-2 text-xs font-heading font-bold text-secondary-foreground"
-    >
-      Verify
-    </button>
-  </section>
-);
+// const VerifyProfileCard = () => (
+//   <section className="bg-card rounded-2xl p-4 shadow-card flex items-center gap-3">
+//     <div className="w-10 h-10 rounded-2xl bg-teal-light text-teal flex items-center justify-center">
+//       <ShieldCheck size={18} />
+//     </div>
+//     <div className="flex-1 min-w-0">
+//       <p className="font-heading font-bold text-sm">Verification</p>
+//       <p className="text-xs text-muted-foreground">Prototype verification for future trust features.</p>
+//     </div>
+//     <button
+//       onClick={() => toast.success("Verification request saved")}
+//       className="rounded-full bg-secondary px-3 py-2 text-xs font-heading font-bold text-secondary-foreground"
+//     >
+//       Verify
+//     </button>
+//   </section>
+// );
 
 const PublicProfilePreviewCard = ({ onPreview }: { onPreview: () => void }) => (
   <section className="bg-card rounded-2xl p-4 shadow-card">
