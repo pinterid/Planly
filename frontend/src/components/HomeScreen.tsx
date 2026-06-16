@@ -73,7 +73,7 @@ const HomeScreen = ({ onOpenGroup, onGoTo }: HomeScreenProps) => {
 
       <section className="mb-6">
         <h2 className="font-heading font-bold text-lg mb-3 flex items-center gap-2">
-          <Sparkles size={18} className="text-primary" /> Decisions
+          <Sparkles size={18} className="text-primary" /> To-Do
         </h2>
         {pendingGroups.length === 0 ? (
           <div className="bg-card rounded-2xl p-4 shadow-card flex items-center gap-3">
@@ -101,7 +101,7 @@ const HomeScreen = ({ onOpenGroup, onGoTo }: HomeScreenProps) => {
       </section>
 
       <section className="mb-6">
-        <h2 className="font-heading font-bold text-lg mb-3" >Most recent group</h2>
+        <h2 className="font-heading font-bold text-lg mb-3" >Recent group</h2>
         {groups.length === 0 ? (
           <div className="bg-card rounded-2xl p-4 shadow-card">
             <p className="font-heading font-semibold text-sm">No group yet</p>
