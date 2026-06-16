@@ -59,6 +59,7 @@ const Index = () => {
             initialGroupId={initialGroupId}
             onGroupOpened={() => setInitialGroupId(null)}
             onOpenProfile={() => setActiveTab("profile")}
+            onOpenBuddies={() => setActiveTab("buddies")}
           />
         );
       case "profile":

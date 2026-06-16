@@ -6,7 +6,6 @@ import {
   ChevronRight,
   ChevronLeft,
   Sparkles,
-  Settings2,
   UserPlus,
   ThumbsUp,
   ThumbsDown,
@@ -23,7 +22,7 @@ import {
   Video,
   AlertTriangle,
   CheckCircle2,
-  Info,
+  Bell,
 } from "lucide-react";
 import {
   getGroups,
@@ -43,13 +42,18 @@ interface Props {
   initialGroupId?: string | null;
   onGroupOpened?: () => void;
   onOpenProfile?: () => void;
+  onOpenBuddies?: () => void;
 }
 
-const GroupPlanningScreen = ({ initialGroupId, onGroupOpened, onOpenProfile }: Props) => {
+type GroupFilter = "all" | "friends" | "buddies";
+
+const GroupPlanningScreen = ({ initialGroupId, onGroupOpened, onOpenProfile, onOpenBuddies }: Props) => {
   const [groups, setGroups] = useState<GroupWithPrefs[]>(getGroups);
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(initialGroupId ?? null);
   const [showNewGroup, setShowNewGroup] = useState(false);
   const [newGroupName, setNewGroupName] = useState("");
+  const [filter, setFilter] = useState<GroupFilter>("all");
+  const [showNotifications, setShowNotifications] = useState(false);
 
 
   const refresh = () => setGroups(getGroups());
@@ -74,51 +78,59 @@ const GroupPlanningScreen = ({ initialGroupId, onGroupOpened, onOpenProfile }: P
         onBack={() => { setSelectedGroupId(null); refresh(); }}
         onUpdate={refresh}
         onOpenProfile={onOpenProfile}
+        onOpenBuddies={onOpenBuddies}
       />
     );
   }
 
-  const activeGroups = groups.length;
-  const openVotes = groups.filter((g) => !g.decidedTrip && g.trips.some((t) => t.votes.some((v) => v.vote === null))).length;
-  const suggestionsReady = groups.filter((g) => g.trips.length > 0).length;
+  const isTravelBuddyGroup = (group: GroupWithPrefs) =>
+    group.name.startsWith("Trip with ") ||
+    group.members.some((member) => member.memberId.startsWith("sg"));
+  const visibleGroups = groups.filter((group) => {
+    if (filter === "friends") return !isTravelBuddyGroup(group);
+    if (filter === "buddies") return isTravelBuddyGroup(group);
+    return true;
+  });
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="px-4 pt-4 pb-4">
-      <h1 className="font-heading text-xl font-bold mb-4 flex items-center gap-2">
-        <Users size={22} className="text-primary" /> Groups
-      </h1>
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <h1 className="font-heading text-xl font-bold flex items-center gap-2">
+          <Users size={22} className="text-primary" /> Groups
+        </h1>
+        <button
+          onClick={() => setShowNotifications(true)}
+          className="relative w-10 h-10 rounded-2xl bg-card shadow-card text-primary flex items-center justify-center"
+          aria-label="Open group notifications"
+        >
+          <Bell size={18} />
+          <span className="absolute right-2.5 top-2.5 w-2 h-2 rounded-full bg-coral" />
+        </button>
+      </div>
 
-      <section className="bg-card rounded-2xl p-4 shadow-card mb-4">
-        <div className="flex items-center justify-between gap-3 mb-3">
-          <div>
-            <p className="font-heading font-bold text-sm">Planning overview</p>
-            <p className="text-xs text-muted-foreground mt-1">Collect preferences, compare suggestions and decide together.</p>
-          </div>
-          <div className="w-10 h-10 rounded-2xl bg-teal-light text-teal flex items-center justify-center">
-            <Info size={18} />
-          </div>
-        </div>
-        <div className="grid grid-cols-3 gap-2">
-          <OverviewStat value={String(activeGroups)} label={activeGroups === 1 ? "active group" : "active groups"} />
-          <OverviewStat value={String(openVotes)} label={openVotes === 1 ? "open vote" : "open votes"} />
-          <OverviewStat value={suggestionsReady > 0 ? "Ready" : "None"} label="AI suggestions ready" />
-        </div>
-      </section>
+      <div className="mb-4 flex gap-2">
+        <FilterChip active={filter === "all"} onClick={() => setFilter("all")}>All</FilterChip>
+        <FilterChip active={filter === "friends"} onClick={() => setFilter("friends")}>Friends</FilterChip>
+        <FilterChip active={filter === "buddies"} onClick={() => setFilter("buddies")}>Travel buddies</FilterChip>
+      </div>
 
       <div className="space-y-3">
-        {groups.map((g) => (
+        {visibleGroups.map((g) => (
           <button
             key={g.id}
             onClick={() => { setSelectedGroupId(g.id); onGroupOpened?.(); }}
             className="w-full bg-card rounded-xl p-4 shadow-card text-left flex items-center gap-4"
           >
             <div className="w-12 h-12 rounded-full gradient-coral flex items-center justify-center text-primary-foreground font-heading font-bold text-lg">
-              {g.members.length}
+              <Users size={20} />
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-heading font-semibold">{g.name}</p>
               <p className="text-sm text-muted-foreground truncate">
                 {g.members.map((m) => m.memberName).join(", ")}
+              </p>
+              <p className="text-xs text-teal font-semibold mt-1">
+                {g.decidedTrip ? "Suggested plan ready" : g.trips.length > 0 ? "Voting in progress" : "Ready to plan"}
               </p>
             </div>
             <ChevronRight size={18} className="text-muted-foreground" />
@@ -148,11 +160,26 @@ const GroupPlanningScreen = ({ initialGroupId, onGroupOpened, onOpenProfile }: P
           <Plus size={18} /> New Group
         </button>
       )}
+
+      {showNotifications && (
+        <NotificationSheet
+          onClose={() => setShowNotifications(false)}
+          onOpenGroup={() => {
+            setShowNotifications(false);
+            const group = groups.find((item) => item.name === "Lisbon Culture Crew") ?? groups[0];
+            if (group) {
+              setSelectedGroupId(group.id);
+              onGroupOpened?.();
+            }
+          }}
+        />
+      )}
     </motion.div>
   );
 };
 
-type View = "overview" | "member-prefs" | "add-member" | "voting" | "result" | "no-match" | "chat" | "videochat";
+type View = "overview" | "member-prefs" | "voting" | "result" | "no-match" | "chat" | "videochat";
+type AddSheetMode = "menu" | "invite" | "travel-confirm" | "travel-success";
 
 const unique = (items: string[]) => Array.from(new Set(items.filter(Boolean)));
 
@@ -198,11 +225,53 @@ const getTripExplanation = (group: GroupWithPrefs, trip: ScoredTrip) => {
   };
 };
 
-const OverviewStat = ({ value, label }: { value: string; label: string }) => (
-  <div className="rounded-2xl bg-secondary px-2 py-3 text-center">
-    <p className="font-heading text-sm font-extrabold text-foreground">{value}</p>
-    <p className="mt-0.5 text-[10px] font-semibold leading-3 text-muted-foreground">{label}</p>
+const FilterChip = ({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) => (
+  <button
+    onClick={onClick}
+    className={`rounded-full px-3.5 py-2 text-xs font-heading font-bold transition-colors ${
+      active ? "bg-primary text-primary-foreground shadow-card" : "bg-secondary text-foreground"
+    }`}
+  >
+    {children}
+  </button>
+);
+
+const BottomSheet = ({ children, onClose }: { children: React.ReactNode; onClose: () => void }) => (
+  <div className="fixed inset-0 z-[80] flex items-end justify-center bg-foreground/20 px-4 pb-24" onClick={onClose}>
+    <motion.div
+      initial={{ opacity: 0, y: 24 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="max-h-[calc(100vh-8rem)] w-full max-w-[398px] overflow-y-auto rounded-3xl bg-card p-4 pb-6 shadow-vacation"
+      onClick={(event) => event.stopPropagation()}
+    >
+      <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-border" />
+      {children}
+    </motion.div>
   </div>
+);
+
+const NotificationSheet = ({ onClose, onOpenGroup }: { onClose: () => void; onOpenGroup: () => void }) => (
+  <BottomSheet onClose={onClose}>
+    <p className="font-heading text-lg font-bold">Requests</p>
+    <div className="mt-3 rounded-2xl bg-secondary p-4">
+      <p className="font-heading text-sm font-bold">Request accepted</p>
+      <p className="mt-1 text-sm text-muted-foreground">You joined Lisbon Culture Crew.</p>
+      <button
+        onClick={onOpenGroup}
+        className="mt-3 w-full rounded-2xl gradient-coral py-3 text-sm font-heading font-bold text-primary-foreground"
+      >
+        Open group
+      </button>
+    </div>
+  </BottomSheet>
 );
 
 const DisplayChips = ({ items, tone = "neutral" }: { items: string[]; tone?: "neutral" | "warning" | "teal" }) => {
@@ -227,21 +296,23 @@ const GroupDetail = ({
   onBack,
   onUpdate,
   onOpenProfile,
+  onOpenBuddies,
 }: {
   group: GroupWithPrefs;
   onBack: () => void;
   onUpdate: () => void;
   onOpenProfile?: () => void;
+  onOpenBuddies?: () => void;
 }) => {
   // Auto-open voting if there are trips with pending votes
-  const initialView: View =
-    group.decidedTrip ? "result"
-    : group.trips.length > 0 && group.trips.some((t) => t.votes.find(v => v.memberId === "self")?.vote === null)
-      ? "voting"
-      : "overview";
+  const initialView: View = "overview";
 
   const [view, setView] = useState<View>(initialView);
   const [editingMember, setEditingMember] = useState<GroupMemberPrefs | null>(null);
+  const [maxGroupSize, setMaxGroupSize] = useState(() => Math.max(group.members.length, group.name === "Lisbon Culture Crew" ? 5 : 5));
+  const [showSizeSheet, setShowSizeSheet] = useState(false);
+  const [addSheetMode, setAddSheetMode] = useState<AddSheetMode | null>(null);
+  const [inviteCopied, setInviteCopied] = useState(false);
 
   const persist = (mutator: (g: GroupWithPrefs) => void) => {
     const all = getGroups();
@@ -269,29 +340,6 @@ const GroupDetail = ({
         member={editingMember}
         onBack={() => { setEditingMember(null); setView("overview"); }}
         onOpenProfile={onOpenProfile}
-      />
-    );
-  }
-
-  if (view === "add-member") {
-    return (
-      <AddMemberForm
-        onSave={(name) => {
-          persist((g) => {
-            g.members.push({
-              memberId: Date.now().toString(),
-              memberName: name,
-              preferences: [],
-              dislikes: [],
-              budgetRange: "",
-              mobilityLevel: "No restrictions",
-              dietaryNeeds: [],
-            });
-          });
-          toast.success(`${name} added!`);
-          setView("overview");
-        }}
-        onBack={() => setView("overview")}
       />
     );
   }
@@ -406,8 +454,17 @@ const GroupDetail = ({
     navigator.clipboard.writeText(inviteLink);
     toast.success("Invite link copied!");
   };
+  const copyInviteInSheet = () => {
+    navigator.clipboard.writeText(inviteLink);
+    setInviteCopied(true);
+  };
   const sharedPreferences = getSharedPreferences(group);
   const conflicts = getPreferenceConflicts(group);
+  const isTravelBuddyGroup =
+    group.name.startsWith("Trip with ") ||
+    group.name === "Lisbon Culture Crew" ||
+    group.members.some((member) => member.memberId.startsWith("sg"));
+  const groupTypeLabel = isTravelBuddyGroup ? "Travel buddy group" : "Friends group";
 
   return (
     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="px-4 pt-4 pb-4">
@@ -415,52 +472,58 @@ const GroupDetail = ({
         <ChevronLeft size={16} /> Back
       </button>
 
-      <h1 className="font-heading text-xl font-bold mb-1">{group.name}</h1>
+      <div className="mb-4">
+        <h1 className="font-heading text-xl font-bold mb-1">{group.name}</h1>
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-sm text-muted-foreground">
+            {group.members.length} of {maxGroupSize} members · {groupTypeLabel}
+          </p>
+          <button onClick={() => setShowSizeSheet(true)} className="text-xs font-heading font-bold text-primary">
+            Edit size
+          </button>
+        </div>
+      </div>
       {group.decidedTrip && (
         <p className="text-sm text-teal font-medium mb-3">Suggested Plan: {group.decidedTrip}</p>
       )}
 
-      <h3 className="font-heading font-semibold text-sm text-muted-foreground mb-2 mt-4">Members</h3>
-      <div className="space-y-2 mb-4">
+      <h3 className="font-heading font-semibold text-sm text-muted-foreground mb-2">Members</h3>
+      <div className="flex gap-3 overflow-x-auto pb-2 mb-4">
         {group.members.map((m) => (
           <button
             key={m.memberId}
             onClick={() => { setEditingMember(m); setView("member-prefs"); }}
-            className="w-full bg-card rounded-xl p-3 shadow-card flex items-center gap-3 text-left"
+            className="min-w-[4.75rem] rounded-2xl bg-card p-3 shadow-card text-center"
           >
-            <div className="w-10 h-10 rounded-full bg-coral-light text-primary flex items-center justify-center"><Users size={18} /></div>
-            <div className="flex-1 min-w-0">
-              <p className="font-heading font-semibold text-sm">{m.memberName}</p>
-              <p className="text-xs text-muted-foreground truncate">
-                {m.preferences.length > 0 ? m.preferences.slice(0, 3).join(", ") : "No preferences set"}
-              </p>
+            <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-full bg-coral-light text-sm font-heading font-bold text-primary">
+              {m.memberName.slice(0, 2).toUpperCase()}
             </div>
-            <Settings2 size={16} className="text-muted-foreground" />
+            <p className="truncate text-xs font-heading font-bold">{m.memberName}</p>
           </button>
         ))}
       </div>
 
-      <section className="bg-card rounded-2xl p-4 shadow-card mb-3">
-        <div className="flex items-start gap-3 mb-3">
-          <div className="w-9 h-9 rounded-2xl bg-secondary text-primary flex items-center justify-center">
+      <section className="bg-card rounded-3xl p-4 shadow-card mb-3 border border-border/60">
+        <div className="flex items-start gap-3 mb-4">
+          <div className="w-9 h-9 rounded-2xl bg-teal-light text-teal flex items-center justify-center">
             <CheckCircle2 size={18} />
           </div>
           <div>
             <p className="font-heading font-bold text-sm">Shared preferences</p>
-            <p className="text-xs text-muted-foreground mt-1">Based on preferences shared by the group.</p>
+            <p className="text-xs text-muted-foreground mt-1">The strongest overlaps across this group.</p>
           </div>
         </div>
         <DisplayChips items={sharedPreferences} />
       </section>
 
-      <section className="bg-card rounded-2xl p-4 shadow-card mb-3">
-        <div className="flex items-start gap-3 mb-3">
+      <section className="bg-card rounded-3xl p-4 shadow-card mb-3 border border-border/60">
+        <div className="flex items-start gap-3 mb-4">
           <div className="w-9 h-9 rounded-2xl bg-warning-light text-warning flex items-center justify-center">
             <AlertTriangle size={18} />
           </div>
           <div>
             <p className="font-heading font-bold text-sm">Preference conflicts</p>
-            <p className="text-xs text-muted-foreground mt-1">Potential tradeoffs to discuss before voting.</p>
+            <p className="text-xs text-muted-foreground mt-1">Small tradeoffs to keep visible while planning.</p>
           </div>
         </div>
         {conflicts.length ? (
@@ -472,79 +535,256 @@ const GroupDetail = ({
         )}
       </section>
 
-      <section className="bg-teal-light rounded-2xl p-4 mb-4 border border-teal/10">
+        <div className="grid grid-cols-2 gap-2 mb-3">
+          <button
+            onClick={() => setView("chat")}
+            className="py-2.5 rounded-xl bg-white font-heading font-semibold text-sm flex items-center justify-center gap-1.5 relative"
+          >
+            <MessageCircle size={16} /> Chat
+            {(group.chat?.length ?? 0) > 0 && (
+              <span className="absolute top-1 right-2 text-[10px] bg-coral text-primary-foreground rounded-full px-1.5">
+                {group.chat!.length}
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => setView("videochat")}
+            className="py-2.5 rounded-xl bg-white font-heading font-semibold text-sm flex items-center justify-center gap-1.5"
+          >
+            <Video size={16} /> Video call
+          </button>
+        </div>
+
+
+        <div className="grid grid-cols-2 gap-2 mb-3">
+          <button
+            onClick={() => {
+              setInviteCopied(false);
+              setAddSheetMode("menu");
+            }}
+            className="py-2.5 rounded-xl bg-white font-heading font-semibold text-sm flex items-center justify-center gap-1.5"
+          >
+            <UserPlus size={16} /> Add
+          </button>
+          <button
+            onClick={copyInvite}
+            className="py-2.5 rounded-xl bg-white font-heading font-semibold text-sm flex items-center justify-center gap-1.5"
+          >
+            <Link2 size={16} /> Invite link
+          </button>
+        </div>
+
+        {group.decidedTrip ? (
+          <button
+            onClick={() => setView("result")}
+            className="w-full py-3 rounded-xl gradient-coral text-primary-foreground font-heading font-semibold flex items-center justify-center gap-2 shadow-card"
+          >
+            <PartyPopper size={18} /> View Suggested Plan
+          </button>
+        ) : (
+          <button
+            onClick={startVoting}
+            className="w-full py-3 rounded-xl gradient-coral text-primary-foreground font-heading font-semibold flex items-center justify-center gap-2 shadow-card"
+          >
+            <Sparkles size={18} /> Get Planly AI suggestions & vote
+          </button>
+        )}
+
+        
+
+      {group.trips.length > 0 && !group.decidedTrip && (
+          <button
+            onClick={() => setView("voting")}
+            className="w-full mt-2 py-2.5 rounded-xl bg-white font-heading font-semibold text-sm"
+          >
+            Continue voting (round {group.votingRound})
+          </button>
+        )}
+      
+      <section className="bg-teal-light rounded-3xl p-3 mt-3 mb-4 border border-teal/10">
         <div className="flex items-start gap-3">
           <div className="w-9 h-9 rounded-2xl bg-white text-teal flex items-center justify-center">
             <Bot size={18} />
           </div>
           <div>
-            <p className="font-heading font-bold text-sm text-foreground">Planly AI</p>
+            <p className="font-heading font-bold text-sm text-foreground">Planly AI support</p>
             <p className="text-sm leading-6 text-foreground mt-1">
-              I can compare your shared preferences and suggest destinations that balance the group.
+              Uses shared preferences and conflicts to prepare balanced trip suggestions and supports you in the chat.
             </p>
           </div>
         </div>
       </section>
 
-      <div className="grid grid-cols-2 gap-2 mb-3">
-        <button
-          onClick={() => setView("chat")}
-          className="py-2.5 rounded-xl bg-secondary font-heading font-semibold text-sm flex items-center justify-center gap-1.5 relative"
-        >
-          <MessageCircle size={16} /> Chat
-          {(group.chat?.length ?? 0) > 0 && (
-            <span className="absolute top-1 right-2 text-[10px] bg-coral text-primary-foreground rounded-full px-1.5">
-              {group.chat!.length}
-            </span>
-          )}
-        </button>
-        <button
-          onClick={() => setView("videochat")}
-          className="py-2.5 rounded-xl bg-secondary font-heading font-semibold text-sm flex items-center justify-center gap-1.5"
-        >
-          <Video size={16} /> Video call
-        </button>
-        <button
-          onClick={() => setView("add-member")}
-          className="py-2.5 rounded-xl bg-secondary font-heading font-semibold text-sm flex items-center justify-center gap-1.5"
-        >
-          <UserPlus size={16} /> Add
-        </button>
-        <button
-          onClick={copyInvite}
-          className="py-2.5 rounded-xl bg-secondary font-heading font-semibold text-sm flex items-center justify-center gap-1.5"
-        >
-          <Link2 size={16} /> Invite link
-        </button>
-      </div>
-
-      {group.decidedTrip ? (
-        <button
-          onClick={() => setView("result")}
-          className="w-full py-3 rounded-xl gradient-coral text-primary-foreground font-heading font-semibold flex items-center justify-center gap-2 shadow-card"
-        >
-          <PartyPopper size={18} /> View Suggested Plan
-        </button>
-      ) : (
-        <button
-          onClick={startVoting}
-          className="w-full py-3 rounded-xl gradient-coral text-primary-foreground font-heading font-semibold flex items-center justify-center gap-2 shadow-card"
-        >
-          <Sparkles size={18} /> Get Planly AI suggestions & vote
-        </button>
+      {showSizeSheet && (
+        <EditSizeSheet
+          value={maxGroupSize}
+          min={group.members.length}
+          onChange={setMaxGroupSize}
+          onClose={() => setShowSizeSheet(false)}
+        />
       )}
 
-      {group.trips.length > 0 && !group.decidedTrip && (
-        <button
-          onClick={() => setView("voting")}
-          className="w-full mt-2 py-2.5 rounded-xl bg-secondary font-heading font-semibold text-sm"
-        >
-          Continue voting (round {group.votingRound})
-        </button>
+      {addSheetMode && (
+        <AddToGroupSheet
+          mode={addSheetMode}
+          inviteLink={inviteLink}
+          copied={inviteCopied}
+          onClose={() => setAddSheetMode(null)}
+          onInvite={() => {
+            setInviteCopied(false);
+            setAddSheetMode("invite");
+          }}
+          onCopyInvite={copyInviteInSheet}
+          onTravelBuddies={() => setAddSheetMode("travel-confirm")}
+          onCancelTravelBuddies={() => setAddSheetMode("menu")}
+          onShowGroup={() => setAddSheetMode("travel-success")}
+          onOpenBuddies={() => {
+            if (onOpenBuddies) {
+              onOpenBuddies();
+              return;
+            }
+            toast("Planly will suggest people who match this group's shared preferences.");
+          }}
+        />
       )}
     </motion.div>
   );
 };
+
+const EditSizeSheet = ({
+  value,
+  min,
+  onChange,
+  onClose,
+}: {
+  value: number;
+  min: number;
+  onChange: (value: number) => void;
+  onClose: () => void;
+}) => {
+  const options = [2, 3, 4, 5, 6, 8, 10].filter((option) => option >= min);
+  return (
+    <BottomSheet onClose={onClose}>
+      <p className="font-heading text-lg font-bold">Edit group size</p>
+      <p className="mt-1 text-sm text-muted-foreground">Set the maximum size for this prototype group.</p>
+      <div className="mt-4 grid grid-cols-4 gap-2">
+        {options.map((option) => (
+          <button
+            key={option}
+            onClick={() => onChange(option)}
+            className={`rounded-2xl py-2.5 text-sm font-heading font-bold ${
+              value === option ? "gradient-coral text-primary-foreground shadow-card" : "bg-secondary text-foreground"
+            }`}
+          >
+            {option}
+          </button>
+        ))}
+      </div>
+      <button onClick={onClose} className="mt-4 w-full rounded-2xl bg-foreground py-3 text-sm font-heading font-bold text-primary-foreground">
+        Done
+      </button>
+    </BottomSheet>
+  );
+};
+
+const AddToGroupSheet = ({
+  mode,
+  inviteLink,
+  copied,
+  onClose,
+  onInvite,
+  onCopyInvite,
+  onTravelBuddies,
+  onCancelTravelBuddies,
+  onShowGroup,
+  onOpenBuddies,
+}: {
+  mode: AddSheetMode;
+  inviteLink: string;
+  copied: boolean;
+  onClose: () => void;
+  onInvite: () => void;
+  onCopyInvite: () => void;
+  onTravelBuddies: () => void;
+  onCancelTravelBuddies: () => void;
+  onShowGroup: () => void;
+  onOpenBuddies: () => void;
+}) => (
+  <BottomSheet onClose={onClose}>
+    {mode === "menu" && (
+      <>
+        <h2 className="font-heading text-xl font-bold mb-4">Add to group</h2>
+        <div className="space-y-2">
+          <button
+            onClick={onInvite}
+            className="w-full rounded-2xl bg-secondary px-4 py-3 text-left font-heading text-sm font-bold"
+          >
+            Invite friends
+          </button>
+          <button
+            onClick={onTravelBuddies}
+            className="w-full rounded-2xl gradient-coral px-4 py-3 text-left font-heading text-sm font-bold text-primary-foreground"
+          >
+            Find travel buddies
+          </button>
+        </div>
+      </>
+    )}
+
+    {mode === "invite" && (
+      <>
+        <h2 className="font-heading text-xl font-bold mb-2">Invite friends</h2>
+        <p className="text-sm text-muted-foreground mb-3">Share this invite link with friends you want to plan with.</p>
+        <div className="rounded-2xl bg-secondary px-3 py-3 text-xs font-semibold text-muted-foreground break-all">
+          {inviteLink}
+        </div>
+        {copied && <p className="mt-3 text-sm font-heading font-bold text-teal">Invite link copied.</p>}
+        <button
+          onClick={onCopyInvite}
+          className="mt-4 w-full rounded-2xl gradient-coral py-3 text-sm font-heading font-bold text-primary-foreground"
+        >
+          Copy invite link
+        </button>
+      </>
+    )}
+
+    {mode === "travel-confirm" && (
+      <>
+        <h2 className="font-heading text-xl font-bold mb-2">Show this group to travel buddies?</h2>
+        <p className="text-sm leading-6 text-muted-foreground">
+          Planly will suggest this group to compatible people based on shared preferences.
+        </p>
+        <div className="mt-4 grid grid-cols-2 gap-2">
+          <button
+            onClick={onCancelTravelBuddies}
+            className="rounded-2xl bg-secondary py-3 text-sm font-heading font-bold"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onShowGroup}
+            className="rounded-2xl gradient-coral py-3 text-sm font-heading font-bold text-primary-foreground"
+          >
+            Show group
+          </button>
+        </div>
+      </>
+    )}
+
+    {mode === "travel-success" && (
+      <>
+        <h2 className="font-heading text-xl font-bold mb-2">Group is visible to compatible buddies.</h2>
+        <p className="text-sm leading-6 text-muted-foreground">Requests will appear in notifications.</p>
+        <button
+          onClick={onOpenBuddies}
+          className="mt-4 w-full rounded-2xl gradient-coral py-3 text-sm font-heading font-bold text-primary-foreground"
+        >
+          Open Buddies
+        </button>
+      </>
+    )}
+  </BottomSheet>
+);
 
 const VotingView = ({
   group,
@@ -844,33 +1084,6 @@ const ReadOnlyPreferenceSection = ({
     {values.length ? <DisplayChips items={values} tone={tone} /> : <p className="text-sm text-muted-foreground">{emptyText}</p>}
   </section>
 );
-
-const AddMemberForm = ({ onSave, onBack }: { onSave: (name: string) => void; onBack: () => void }) => {
-  const [name, setName] = useState("");
-  return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="px-4 pt-4 pb-4">
-      <button onClick={onBack} className="text-sm text-primary font-medium mb-4 flex items-center gap-1">
-        <ChevronLeft size={16} /> Back
-      </button>
-      <h2 className="font-heading text-xl font-bold mb-4">Add Member</h2>
-      <div className="bg-card rounded-xl p-4 shadow-card space-y-3">
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Member name..."
-          className="w-full bg-transparent text-sm font-medium outline-none border-b border-border pb-2"
-          autoFocus
-        />
-        <button
-          onClick={() => name.trim() && onSave(name.trim())}
-          className="w-full py-2.5 rounded-xl gradient-coral text-primary-foreground font-heading font-semibold text-sm"
-        >
-          Add to Group
-        </button>
-      </div>
-    </motion.div>
-  );
-};
 
 const GroupChatView = ({
   group,
