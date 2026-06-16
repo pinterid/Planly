@@ -12,6 +12,8 @@ export interface UserProfile {
   preferredTemperature: string;
   noGos: string[];
   travelMode: "solo" | "friends" | "";
+  preferredGroupSize: string;
+  destinationInterests: string[];
   dietaryNeeds: string[];
   languages: string[];
   mobilityLevel: string;
@@ -90,6 +92,8 @@ const defaultProfile: UserProfile = {
   preferredTemperature: "",
   noGos: [],
   travelMode: "",
+  preferredGroupSize: "",
+  destinationInterests: [],
   dietaryNeeds: [],
   languages: [],
   mobilityLevel: "No restrictions",
@@ -370,6 +374,8 @@ export const scoreTripsForGroup = (group: GroupWithPrefs, excludeNames: string[]
 export const DISABILITY_OPTIONS = ["Wheelchair user", "Visual impairment", "Hearing impairment", "Chronic pain", "None"];
 export const FEAR_OPTIONS = ["Heights", "Flying", "Water/swimming", "Crowds", "Enclosed spaces", "None"];
 export const TRAVEL_STYLE_OPTIONS = ["Adventure", "Relaxation", "Cultural", "Luxury", "Budget"];
+export const PREFERRED_GROUP_SIZE_OPTIONS = ["2 people", "3-5 people", "6-10 people", "Open to any size"];
+export const DESTINATION_INTEREST_OPTIONS = ["Southern Europe", "Northern Europe", "Beach destinations", "Mountains", "City trips", "Warm countries", "Open to inspiration"];
 export const BUDGET_OPTIONS = ["€", "€€", "€€€"];
 export const DURATION_OPTIONS = ["1-2 Days", "2-4 Days", "4+ Days"];
 export const TEMPERATURE_OPTIONS = ["Warm", "Mild", "Cool"];

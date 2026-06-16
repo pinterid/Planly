@@ -28,11 +28,13 @@ import {
 import {
   ACTIVITY_OPTIONS,
   DIETARY_OPTIONS,
+  DESTINATION_INTEREST_OPTIONS,
   DISABILITY_OPTIONS,
   FEAR_OPTIONS,
   LANGUAGE_OPTIONS,
   MOBILITY_OPTIONS,
   NOGO_OPTIONS,
+  PREFERRED_GROUP_SIZE_OPTIONS,
   TEMPERATURE_OPTIONS,
   TRAVEL_STYLE_OPTIONS,
   UserProfile,
@@ -47,7 +49,7 @@ interface ProfileScreenProps {
   onSignOut?: () => void;
 }
 
-type EditSection = "basic" | "travel" | "interests" | "nogos" | "comfort" | "visibility";
+type EditSection = "basic" | "travel" | "matching" | "interests" | "nogos" | "comfort" | "visibility";
 type Visibility = "Shared with matches" | "Used for suggestions" | "Private";
 
 const requiredChecks = [
@@ -57,6 +59,8 @@ const requiredChecks = [
   { key: "budget", label: "Budget range", isComplete: (p: UserProfile) => p.budgetRange.trim().length > 0 },
   { key: "duration", label: "Travel duration", isComplete: (p: UserProfile) => p.duration.trim().length > 0 },
   { key: "style", label: "Travel style", isComplete: (p: UserProfile) => p.travelStyle.length > 0 },
+  { key: "groupSize", label: "Preferred group size", isComplete: (p: UserProfile) => p.preferredGroupSize.trim().length > 0 },
+  { key: "destinations", label: "Destination interests", isComplete: (p: UserProfile) => p.destinationInterests.length > 0 },
   { key: "interests", label: "Interests", isComplete: (p: UserProfile) => p.activityInterests.length > 0 },
 ];
 
@@ -194,9 +198,20 @@ const ProfileScreen = ({ isOnboarding = false, onComplete, onSignOut }: ProfileS
             ["Travel duration", profile.duration || "Not set"],
             ["Travel style", profile.travelStyle.length ? profile.travelStyle.join(", ") : "Missing"],
             ["Preferred weather", profile.preferredTemperature || "Not set"],
+            ["Preferred group size", `${profile.preferredGroupSize || "Not set"}`],
           ]}
-          isMissing={!profile.budgetRange || !profile.duration || profile.travelStyle.length === 0}
+          isMissing={!profile.budgetRange || !profile.duration || profile.travelStyle.length === 0 || !profile.preferredGroupSize}
           onEdit={() => setActiveEdit("travel")}
+        />
+
+        <ProfileSectionCard
+          icon={<Users size={18} />}
+          title="Destination interests"
+          visibility="Shared with matches"
+          chips={profile.destinationInterests}
+          emptyText="Add destination interests."
+          isMissing={profile.destinationInterests.length === 0}
+          onEdit={() => setActiveEdit("matching")}
         />
 
         <ProfileSectionCard
@@ -549,6 +564,7 @@ const PublicProfileModal = ({ profile, onClose }: { profile: UserProfile; onClos
       <div className="mt-4 flex flex-col gap-3">
         <PreviewRow label="Languages" value={profile.languages.join(", ") || "Not shared yet"} />
         <PreviewRow label="Travel style" value={profile.travelStyle.join(", ") || "Not shared yet"} />
+        <PreviewRow label="Destination interests" value={profile.destinationInterests.join(", ") || "Not shared yet"} />
         <PreviewRow label="Shared interests" value={profile.activityInterests.join(", ") || "Not shared yet"} />
       </div>
     </div>
@@ -556,7 +572,7 @@ const PublicProfileModal = ({ profile, onClose }: { profile: UserProfile; onClos
       <div className="flex items-start gap-2">
         <EyeOff size={17} className="text-teal mt-0.5" />
         <p className="text-sm leading-6 text-foreground">
-          Budget details, no-gos, health, accessibility and sensitive preferences stay private by default.
+          Preferred group size, budget details, no-gos, health, accessibility and sensitive preferences stay private by default.
         </p>
       </div>
     </div>
@@ -594,6 +610,7 @@ const EditSheet = ({
   const title = {
     basic: "Edit basic information",
     travel: "Edit travel style & budget",
+    matching: "Edit destination interests",
     interests: "Edit interests",
     nogos: "Edit no-gos",
     comfort: "Edit health, accessibility & comfort",
@@ -638,6 +655,46 @@ const EditSheet = ({
             onAdd={() => addCustomItem("travelStyle")}
           />
           <SingleChoice label="Preferred weather" options={TEMPERATURE_OPTIONS} selected={profile.preferredTemperature} onSelect={(value) => updateProfile({ preferredTemperature: value })} />
+          <div className="rounded-2xl bg-teal-light p-3">
+            <p className="text-sm font-heading font-bold text-teal">Preferred group size</p>
+            <p className="text-xs text-foreground mt-1">Used for suggestions</p>
+          </div>
+          <SingleChoice
+            label="Preferred group size"
+            options={PREFERRED_GROUP_SIZE_OPTIONS}
+            selected={profile.preferredGroupSize}
+            onSelect={(value) => updateProfile({ preferredGroupSize: value })}
+          />
+          <CustomSingleEntry
+            label="Add custom group size"
+            value={customValue}
+            onChange={setCustomValue}
+            onAdd={() => {
+              const value = customValue.trim();
+              if (!value) return;
+              updateProfile({ preferredGroupSize: value });
+              setCustomValue("");
+            }}
+          />
+        </div>
+      )}
+
+      {section === "matching" && (
+        <div className="flex flex-col gap-4">
+          <div className="rounded-2xl bg-coral-light p-3">
+            <p className="text-sm font-heading font-bold text-primary">Destination interests</p>
+            <p className="text-xs text-foreground mt-1">Shared with matches</p>
+          </div>
+          <ChipEditor
+            label="Destination interests"
+            options={DESTINATION_INTEREST_OPTIONS}
+            selected={profile.destinationInterests}
+            onToggle={(value) => toggleInArray("destinationInterests", value)}
+            customValue={customValue}
+            onCustomChange={setCustomValue}
+            onCustomAdd={() => addCustomItem("destinationInterests")}
+            addLabel="Add destination interest"
+          />
         </div>
       )}
 
@@ -689,8 +746,8 @@ const EditSheet = ({
           <p className="rounded-2xl bg-teal-light p-4 text-sm leading-6 text-foreground">
             Only relevant preferences are used for matching and group suggestions. Sensitive details stay private by default.
           </p>
-          <VisibilityRule icon={<Eye size={17} />} title="Shared with matches" text="Name, age, languages, travel style and shared interests." />
-          <VisibilityRule icon={<BrainCircuit size={17} />} title="Used for suggestions" text="Budget, duration, no-gos and preference signals." />
+          <VisibilityRule icon={<Eye size={17} />} title="Shared with matches" text="Name, age, languages, travel style, destination interests and shared interests." />
+          <VisibilityRule icon={<BrainCircuit size={17} />} title="Used for suggestions" text="Preferred group size, budget, duration, no-gos and preference signals." />
           <VisibilityRule icon={<Lock size={17} />} title="Private by default" text="Health, accessibility and sensitive comfort details." />
           <button onClick={onPreview} className="w-full rounded-2xl bg-secondary py-3 text-sm font-heading font-bold">
             Preview public profile
@@ -977,6 +1034,23 @@ const CustomEntry = ({ label, value, onChange, onAdd }: { label: string; value: 
   </div>
 );
 
+const CustomSingleEntry = ({ label, value, onChange, onAdd }: { label: string; value: string; onChange: (value: string) => void; onAdd: () => void }) => (
+  <div className="rounded-2xl bg-card border border-border p-3">
+    <p className="text-sm font-heading font-bold">{label}</p>
+    <div className="mt-3 flex gap-2">
+      <input
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="min-w-0 flex-1 rounded-2xl border border-border bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
+        placeholder="Add custom entry"
+      />
+      <button onClick={onAdd} className="w-10 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center" aria-label={label}>
+        <Plus size={16} />
+      </button>
+    </div>
+  </div>
+);
+
 const RequiredHint = () => (
   <div className="rounded-2xl bg-coral-light px-3 py-2 text-xs font-semibold text-primary">
     Required for matching and group suggestions.
@@ -1053,6 +1127,10 @@ const OnboardingProfile = ({
   };
 
   const reviewMissingDetails = () => {
+    if (!profile.preferredGroupSize) {
+      setStep(1);
+      return;
+    }
     if (!profile.budgetRange || !profile.duration || profile.travelStyle.length === 0) {
       setStep(3);
       return;
@@ -1095,8 +1173,33 @@ const OnboardingProfile = ({
         )}
         {step === 1 && (
           <div className="flex flex-col gap-3">
-            <ModeCard icon={<UserPlus size={22} />} title="Find travel buddies" desc="Continue to buddy matching after setup." selected={profile.travelMode === "solo"} onClick={() => updateProfile({ travelMode: "solo" })} />
+            <ModeCard icon={<UserPlus size={22} />} title="I want to find a group" desc="Continue to buddy matching after setup." selected={profile.travelMode === "solo"} onClick={() => updateProfile({ travelMode: "solo" })} />
             <ModeCard icon={<Users size={22} />} title="I already have a group" desc="Create a mock invite link for friends." selected={profile.travelMode === "friends"} onClick={() => updateProfile({ travelMode: "friends" })} />
+            {profile.travelMode === "solo" && (
+              <div className="rounded-2xl bg-card p-4 shadow-card border border-border">
+                <div className="mb-3">
+                  <p className="font-heading font-bold text-sm">Preferred group size</p>
+                  <p className="text-xs text-teal font-semibold mt-1">Used for suggestions</p>
+                </div>
+                <SingleChoice
+                  label="Choose a size"
+                  options={PREFERRED_GROUP_SIZE_OPTIONS}
+                  selected={profile.preferredGroupSize}
+                  onSelect={(value) => updateProfile({ preferredGroupSize: value })}
+                />
+                <CustomSingleEntry
+                  label="Add custom group size"
+                  value={customValue}
+                  onChange={setCustomValue}
+                  onAdd={() => {
+                    const value = customValue.trim();
+                    if (!value) return;
+                    updateProfile({ preferredGroupSize: value });
+                    setCustomValue("");
+                  }}
+                />
+              </div>
+            )}
             {profile.travelMode === "friends" && (
               <div className="rounded-2xl bg-card p-4 shadow-card border border-border">
                 <p className="font-heading font-bold text-sm">Invite friends</p>
@@ -1150,6 +1253,19 @@ const OnboardingProfile = ({
         {step === 4 && (
           <>
             <OptionalSetupHint />
+            <ChipEditor
+              label="Destination interests"
+              options={DESTINATION_INTEREST_OPTIONS}
+              selected={profile.destinationInterests}
+              onToggle={(value) => toggleInArray("destinationInterests", value)}
+              customValue={customValue}
+              onCustomChange={setCustomValue}
+              onCustomAdd={() => addCustomItem("destinationInterests")}
+              addLabel="Add destination interest"
+            />
+            <div className="rounded-2xl bg-coral-light px-3 py-2 text-xs font-semibold text-primary">
+              Destination interests: Shared with matches
+            </div>
             <ChipEditor label="Interests" options={ACTIVITY_OPTIONS} selected={profile.activityInterests} onToggle={(value) => toggleInArray("activityInterests", value)} />
             <CustomEntry
               label="Add custom interest"
@@ -1187,7 +1303,7 @@ const OnboardingProfile = ({
             </p>
             {hasMissingPreferences && (
               <div className="mt-4 rounded-2xl bg-warning-light p-3">
-                <p className="text-sm font-semibold text-foreground">Review missing details</p>
+                <p className="text-sm font-semibold text-foreground">Details you can add later</p>
                 <div className="mt-3 flex flex-col gap-2">
                   {missingPreferenceFields.map((field) => (
                     <span key={field} className="rounded-2xl bg-white/80 px-3 py-2 text-xs font-semibold text-warning">

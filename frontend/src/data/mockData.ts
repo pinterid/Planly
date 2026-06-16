@@ -6,7 +6,24 @@ export interface TravelerProfile {
   budget: string;
   style: string;
   destination: string;
+  preferredGroupSize: string;
+  destinationInterests: string[];
   about: string[];
+}
+
+export interface SuggestedGroup {
+  id: string;
+  name: string;
+  currentMembers: number;
+  desiredGroupSize: number;
+  destinationInterests: string[];
+  region: string;
+  travelStyle: string[];
+  compatibility: number;
+  reason: string;
+  why: string;
+  possibleConflicts: string[];
+  memberPreviewNames: string[];
 }
 
 export interface TripOption {
@@ -45,6 +62,8 @@ export const travelers: TravelerProfile[] = [
     budget: "€1,000",
     style: "Adventure",
     destination: "Open",
+    preferredGroupSize: "3-5 people",
+    destinationInterests: ["Southern Europe", "City trips", "Warm countries"],
     about: [
       "I work as a marketing manager",
       "I am always open to new experiences",
@@ -59,6 +78,8 @@ export const travelers: TravelerProfile[] = [
     budget: "€800",
     style: "Culture",
     destination: "Southern Europe",
+    preferredGroupSize: "3-5 people",
+    destinationInterests: ["Southern Europe", "City trips", "Northern Europe"],
     about: [
       "Software developer who loves history",
       "Prefer walking tours over bus tours",
@@ -73,6 +94,8 @@ export const travelers: TravelerProfile[] = [
     budget: "€600",
     style: "Relaxation",
     destination: "Beach destinations",
+    preferredGroupSize: "2 people",
+    destinationInterests: ["Beach destinations", "Warm countries", "Open to inspiration"],
     about: [
       "Graphic designer & yoga enthusiast",
       "Looking for chill travel partners",
@@ -87,11 +110,44 @@ export const travelers: TravelerProfile[] = [
     budget: "€2,000",
     style: "Family",
     destination: "Kid-friendly",
+    preferredGroupSize: "6-10 people",
+    destinationInterests: ["Mountains", "Northern Europe", "Open to inspiration"],
     about: [
       "IT team lead with two kids",
       "Looking for family-friendly trips",
       "Enjoys outdoor activities",
     ],
+  },
+];
+
+export const suggestedGroups: SuggestedGroup[] = [
+  {
+    id: "sg1",
+    name: "Lisbon Culture Crew",
+    currentMembers: 3,
+    desiredGroupSize: 5,
+    destinationInterests: ["Southern Europe"],
+    region: "Southern Europe",
+    travelStyle: ["Culture", "Food", "City trips"],
+    compatibility: 84,
+    reason: "Strong fit for culture, food and flexible city planning.",
+    why: "This group matches your interest in Southern Europe, culture trips and small-group travel.",
+    possibleConflicts: [],
+    memberPreviewNames: ["Anna", "David", "Tobias"],
+  },
+  {
+    id: "sg2",
+    name: "Alpine Weekend Group",
+    currentMembers: 2,
+    desiredGroupSize: 4,
+    destinationInterests: ["Mountains"],
+    region: "Mountains",
+    travelStyle: ["Nature", "Relaxation"],
+    compatibility: 60,
+    reason: "Some overlap on calm travel, but the destination style is more nature-focused.",
+    why: "This group matches parts of your relaxed travel style, but focuses more on mountain weekends.",
+    possibleConflicts: ["Lower compatibility if you prefer city trips over outdoor plans."],
+    memberPreviewNames: ["Lisa", "Markus"],
   },
 ];
 
