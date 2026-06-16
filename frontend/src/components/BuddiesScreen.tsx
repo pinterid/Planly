@@ -19,7 +19,8 @@ import { toast } from "sonner";
 
 type Status = "new" | "matched" | "rejected" | "blocked";
 type GroupStatus = "rejected";
-type View = "list" | "preview" | "feedback" | "matched" | "group-created" | "group-preview" | "group-request";
+type View = "list" | "preview" | "group-preview";
+type BuddySheet = "feedback" | "matched" | "group-created" | "group-request";
 
 interface BuddiesScreenProps {
   onOpenGroup?: (id: string) => void;
@@ -136,6 +137,7 @@ const BuddiesScreen = ({ onOpenGroup }: BuddiesScreenProps) => {
     return initial;
   });
   const [view, setView] = useState<View>("list");
+  const [sheet, setSheet] = useState<BuddySheet | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [feedbackName, setFeedbackName] = useState<string | null>(null);
@@ -167,6 +169,7 @@ const BuddiesScreen = ({ onOpenGroup }: BuddiesScreenProps) => {
     setSelectedId(null);
     setSelectedGroupId(null);
     setFeedbackName(null);
+    setSheet(null);
   };
 
   const openProfile = (traveler: EnrichedTraveler) => {
@@ -177,7 +180,7 @@ const BuddiesScreen = ({ onOpenGroup }: BuddiesScreenProps) => {
   const rejectTraveler = (traveler: EnrichedTraveler) => {
     setStatuses((current) => ({ ...current, [traveler.id]: "rejected" }));
     setFeedbackName(traveler.name);
-    setView("feedback");
+    setSheet("feedback");
   };
 
   const blockTraveler = (traveler: EnrichedTraveler) => {
@@ -192,14 +195,14 @@ const BuddiesScreen = ({ onOpenGroup }: BuddiesScreenProps) => {
     setStatuses((current) => ({ ...current, [traveler.id]: "matched" }));
     addMatch(traveler.id);
     setSelectedId(traveler.id);
-    setView("matched");
+    setSheet("matched");
   };
 
   const startGroup = (traveler: EnrichedTraveler) => {
     const group = addGroup(`Trip with ${traveler.name}`);
     addBuddyToGroup(group.id, traveler);
     setCreatedGroup({ id: group.id, buddyName: traveler.name });
-    setView("group-created");
+    setSheet("group-created");
   };
 
   const openGroupPreview = (group: SuggestedGroup) => {
@@ -210,7 +213,7 @@ const BuddiesScreen = ({ onOpenGroup }: BuddiesScreenProps) => {
   const rejectGroup = (group: SuggestedGroup) => {
     setGroupStatuses((current) => ({ ...current, [group.id]: "rejected" }));
     setFeedbackName(group.name);
-    setView("feedback");
+    setSheet("feedback");
   };
 
   const requestToJoinGroup = (group: SuggestedGroup) => {
@@ -234,61 +237,29 @@ const BuddiesScreen = ({ onOpenGroup }: BuddiesScreenProps) => {
         saveGroups(allGroups);
       }
       setGroupRequest({ accepted: true, groupName: group.name, groupId: created.id });
-      setView("group-request");
+      setSheet("group-request");
       return;
     }
 
     setGroupRequest({ accepted: false, groupName: group.name });
-    setView("group-request");
+    setSheet("group-request");
   };
 
-  if (view === "feedback" && feedbackName) {
-    return (
-      <ScreenFrame onBack={backToList}>
-        <div className="bg-card rounded-2xl p-5 shadow-card">
-          <div className="w-11 h-11 rounded-2xl bg-secondary flex items-center justify-center mb-4">
-            <X size={20} className="text-destructive" />
-          </div>
-          <h2 className="font-heading text-xl font-extrabold mb-2">Planly will show different suggestions.</h2>
-          <p className="text-sm text-muted-foreground leading-6">
-            {feedbackName} has been removed from this round.
-          </p>
-          <button
-            onClick={backToList}
-            className="w-full mt-5 py-3 rounded-2xl bg-foreground text-primary-foreground font-heading font-bold"
-          >
-            Keep browsing
-          </button>
-        </div>
-      </ScreenFrame>
-    );
-  }
+  const renderBuddySheet = () => (
+    <BuddyBottomSheet
+      sheet={sheet}
+      selected={selected}
+      feedbackName={feedbackName}
+      createdGroup={createdGroup}
+      groupRequest={groupRequest}
+      onClose={() => setSheet(null)}
+      onKeepBrowsing={backToList}
+      onStartGroup={(traveler) => startGroup(traveler)}
+      onOpenGroup={(id) => onOpenGroup?.(id)}
+    />
+  );
 
-  if (view === "matched" && selected) {
-    return (
-      <ScreenFrame onBack={() => setView("preview")}>
-        <div className="bg-card rounded-2xl p-5 shadow-card text-center">
-          <Avatar name={selected.name} size="lg" className="mx-auto mb-4" />
-          <p className="text-sm text-teal font-bold mb-1">Mutual interest</p>
-          <h2 className="font-heading text-2xl font-extrabold mb-2">You matched with {selected.name}.</h2>
-          <p className="text-sm text-muted-foreground leading-6 mb-5">
-            You can now start a travel group together.
-          </p>
-          <button
-            onClick={() => startGroup(selected)}
-            className="w-full py-3.5 rounded-2xl gradient-coral text-primary-foreground font-heading font-bold shadow-card"
-          >
-            Start group
-          </button>
-          <button onClick={backToList} className="w-full mt-2 py-3 rounded-2xl bg-secondary text-foreground font-heading font-bold">
-            Keep browsing
-          </button>
-        </div>
-      </ScreenFrame>
-    );
-  }
-
-  if (view === "group-created" && createdGroup) {
+  if (false && createdGroup) {
     return (
       <ScreenFrame onBack={backToList}>
         <div className="bg-card rounded-2xl p-5 shadow-card">
@@ -377,11 +348,12 @@ const BuddiesScreen = ({ onOpenGroup }: BuddiesScreenProps) => {
             Request to join
           </button>
         </div>
+        {renderBuddySheet()}
       </ScreenFrame>
     );
   }
 
-  if (view === "group-request" && groupRequest) {
+  if (false && groupRequest) {
     return (
       <ScreenFrame onBack={backToList}>
         <div className="bg-card rounded-2xl p-5 shadow-card">
@@ -473,7 +445,7 @@ const BuddiesScreen = ({ onOpenGroup }: BuddiesScreenProps) => {
 
         {status === "matched" ? (
           <button
-            onClick={() => setView("matched")}
+            onClick={() => setSheet("matched")}
             className="w-full py-3.5 rounded-2xl gradient-coral text-primary-foreground font-heading font-bold shadow-card"
           >
             Continue match
@@ -513,6 +485,7 @@ const BuddiesScreen = ({ onOpenGroup }: BuddiesScreenProps) => {
             <Ban size={13} /> Block
           </button>
         </div>
+        {renderBuddySheet()}
       </ScreenFrame>
     );
   }
@@ -575,6 +548,7 @@ const BuddiesScreen = ({ onOpenGroup }: BuddiesScreenProps) => {
           No more compatible profiles in this prototype round.
         </div>
       )}
+      {renderBuddySheet()}
     </motion.div>
   );
 };
@@ -609,6 +583,125 @@ const SuggestedGroupCard = ({
     </div>
   </div>
 );
+
+const BuddyBottomSheet = ({
+  sheet,
+  selected,
+  feedbackName,
+  createdGroup,
+  groupRequest,
+  onClose,
+  onKeepBrowsing,
+  onStartGroup,
+  onOpenGroup,
+}: {
+  sheet: BuddySheet | null;
+  selected: EnrichedTraveler | null;
+  feedbackName: string | null;
+  createdGroup: { id: string; buddyName: string } | null;
+  groupRequest: { accepted: boolean; groupName: string; groupId?: string } | null;
+  onClose: () => void;
+  onKeepBrowsing: () => void;
+  onStartGroup: (traveler: EnrichedTraveler) => void;
+  onOpenGroup: (id: string) => void;
+}) => {
+  if (!sheet) return null;
+
+  return (
+    <div
+      className="fixed inset-y-0 left-1/2 z-[80] flex w-full max-w-[430px] -translate-x-1/2 items-end justify-center bg-foreground/20 px-4 md:inset-y-6 md:rounded-[2rem]"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-h-[calc(100svh-3rem)] w-full max-w-[398px] overflow-y-auto rounded-t-3xl bg-card p-4 pb-24 shadow-vacation md:max-h-[calc(100vh-6rem)]"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-border" />
+
+        {sheet === "feedback" && feedbackName && (
+          <>
+            <div className="w-11 h-11 rounded-2xl bg-secondary flex items-center justify-center mb-4">
+              <X size={20} className="text-destructive" />
+            </div>
+            <h2 className="font-heading text-xl font-extrabold mb-2">Planly will show different suggestions.</h2>
+            <p className="text-sm text-muted-foreground leading-6">{feedbackName} has been removed from this round.</p>
+            <button onClick={onKeepBrowsing} className="w-full mt-5 py-3 rounded-2xl bg-foreground text-primary-foreground font-heading font-bold">
+              Keep browsing
+            </button>
+          </>
+        )}
+
+        {sheet === "matched" && selected && (
+          <div className="text-center">
+            <Avatar name={selected.name} size="lg" className="mx-auto mb-4" />
+            <p className="text-sm text-teal font-bold mb-1">Mutual interest</p>
+            <h2 className="font-heading text-2xl font-extrabold mb-2">You matched with {selected.name}.</h2>
+            <p className="text-sm text-muted-foreground leading-6 mb-5">You can now start a travel group together.</p>
+            <button
+              onClick={() => onStartGroup(selected)}
+              className="w-full py-3.5 rounded-2xl gradient-coral text-primary-foreground font-heading font-bold shadow-card"
+            >
+              Start group
+            </button>
+            <button onClick={onKeepBrowsing} className="w-full mt-2 py-3 rounded-2xl bg-secondary text-foreground font-heading font-bold">
+              Keep browsing
+            </button>
+          </div>
+        )}
+
+        {sheet === "group-created" && createdGroup && (
+          <>
+            <div className="w-12 h-12 rounded-2xl bg-teal-light text-teal flex items-center justify-center mb-4">
+              <Users size={22} />
+            </div>
+            <h2 className="font-heading text-2xl font-extrabold mb-2">New group created.</h2>
+            <p className="text-sm text-muted-foreground leading-6">
+              {createdGroup.buddyName} has been added as your first travel buddy.
+            </p>
+            <div className="mt-4 rounded-2xl bg-secondary p-4">
+              <p className="text-sm font-heading font-bold">2 members - Ready to plan</p>
+            </div>
+            <button
+              onClick={() => onOpenGroup(createdGroup.id)}
+              className="w-full mt-5 py-3.5 rounded-2xl bg-foreground text-primary-foreground font-heading font-bold shadow-card"
+            >
+              Open group
+            </button>
+          </>
+        )}
+
+        {sheet === "group-request" && groupRequest && (
+          <>
+            <div className="w-12 h-12 rounded-2xl bg-teal-light text-teal flex items-center justify-center mb-4">
+              <Users size={22} />
+            </div>
+            <h2 className="font-heading text-2xl font-extrabold mb-2">
+              {groupRequest.accepted ? "Request accepted." : "Request sent."}
+            </h2>
+            <p className="text-sm text-muted-foreground leading-6">
+              {groupRequest.accepted
+                ? `${groupRequest.groupName} is now available in your groups.`
+                : "The group will review your travel profile."}
+            </p>
+            {groupRequest.accepted && groupRequest.groupId && (
+              <button
+                onClick={() => onOpenGroup(groupRequest.groupId!)}
+                className="w-full mt-5 py-3.5 rounded-2xl bg-foreground text-primary-foreground font-heading font-bold shadow-card"
+              >
+                Open group
+              </button>
+            )}
+            <button onClick={onKeepBrowsing} className="w-full mt-2 py-3 rounded-2xl bg-secondary text-foreground font-heading font-bold">
+              Back to buddies
+            </button>
+          </>
+        )}
+      </motion.div>
+    </div>
+  );
+};
 
 const BuddyCard = ({
   traveler,

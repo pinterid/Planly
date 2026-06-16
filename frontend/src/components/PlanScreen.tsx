@@ -243,14 +243,14 @@ const TripDetailModal = ({
     animate={{ opacity: 1 }}
     exit={{ opacity: 0 }}
     onClick={onClose}
-    className="fixed inset-0 z-50 bg-background/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-3"
+    className="fixed inset-y-0 left-1/2 z-50 flex w-full max-w-[430px] -translate-x-1/2 items-end justify-center bg-background/70 p-3 pb-24 backdrop-blur-sm md:inset-y-6 md:items-center md:rounded-[2rem]"
   >
     <motion.div
       initial={{ y: 40, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       exit={{ y: 40, opacity: 0 }}
       onClick={(e) => e.stopPropagation()}
-      className="bg-card w-full max-w-md rounded-2xl overflow-hidden shadow-card-hover max-h-[85vh] overflow-y-auto"
+      className="bg-card w-full max-w-md rounded-2xl overflow-hidden shadow-card-hover max-h-[calc(100svh-9rem)] overflow-y-auto md:max-h-[calc(100vh-12rem)]"
     >
       <div className="relative">
         <img src={images[trip.image]} alt={trip.destination} className="w-full h-44 object-cover" />

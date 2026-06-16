@@ -20,31 +20,32 @@ const LoginScreen = ({ onLogIn }: LoginScreenProps) => {
   const nameFromEmail = email.includes("@") ? email.split("@")[0].replace(/[._-]/g, " ") : "";
 
   return (
-    <div className="min-h-screen w-full max-w-[430px] mx-auto relative overflow-hidden bg-background shadow-vacation md:my-6 md:min-h-[calc(100vh-3rem)] md:rounded-[2rem]">
-      <div className="absolute inset-0 start-screen-surface" />
+    <div className="min-h-screen w-full bg-background md:flex md:items-center md:justify-center md:px-4">
+      <div className="relative mx-auto h-[100svh] w-full max-w-[430px] overflow-hidden bg-background shadow-vacation md:h-[calc(100vh-3rem)] md:rounded-[2rem]">
+        <div className="absolute inset-0 start-screen-surface" />
 
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35 }}
-        className="relative z-10 px-5 pt-5 pb-4 min-h-screen flex flex-col"
-      >
-        <div className="flex items-center justify-between mb-4">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35 }}
+          className="relative z-10 flex h-full flex-col overflow-y-auto overscroll-contain px-5 pt-5 pb-8"
+        >
+        <div className="flex items-center justify-between mt-3 mb-6">
           <div className="flex items-center gap-2.5">
             <div className="w-10 h-10 rounded-[1.15rem] bg-white text-primary flex items-center justify-center shadow-card border border-border">
               <Palmtree size={18} />
             </div>
             <span className="font-heading text-xl font-extrabold tracking-tight">Planly</span>
           </div>
-          <button
+          {/* <button
             onClick={() => onLogIn()}
             className="text-xs font-bold text-foreground px-3.5 py-2 rounded-full bg-white border border-border shadow-card"
           >
             Demo
-          </button>
+          </button> */}
         </div>
 
-        <div className="relative mb-4">
+        <div className="relative mb-6">
           <div className="relative overflow-hidden rounded-[2rem] h-[14rem] shadow-vacation">
             <img src={lisbonImg} alt="Sunlit Lisbon street" className="absolute inset-0 w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-b from-white/0 via-white/0 to-foreground/20" />
@@ -65,11 +66,11 @@ const LoginScreen = ({ onLogIn }: LoginScreenProps) => {
           </p>
         </div>
 
-        <div className="grid grid-cols-3 gap-2 mb-4">
+        <div className="grid grid-cols-3 gap-2 mb-7">
           {valuePoints.map(({ label, icon: Icon }) => (
             <div
               key={label}
-              className="rounded-2xl bg-accent-soft border border-primary/15 px-3 py-2.5 shadow-card flex flex-col items-center justify-center text-center"           >
+              className="rounded-2xl bg-white border border-primary/15 px-3 py-2.5 shadow-card flex flex-col items-center justify-center text-center"           >
               <div className="w-7 h-7 rounded-full bg-white text-primary flex items-center justify-center mb-1.5 shadow-sm">
                 <Icon size={15} strokeWidth={2.4} />
               </div>
@@ -80,7 +81,7 @@ const LoginScreen = ({ onLogIn }: LoginScreenProps) => {
           ))}
         </div>
 
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 mt-5 mb-5">
           <label className="login-field">
             <Mail size={18} className="text-teal" />
             <input
@@ -105,18 +106,19 @@ const LoginScreen = ({ onLogIn }: LoginScreenProps) => {
 
         <button
           onClick={() => onLogIn(nameFromEmail)}
-          className="w-full mt-4 py-4 rounded-2xl bg-navy text-primary-foreground font-heading font-extrabold flex items-center justify-center shadow-vacation"
+          className="w-full mt-2 py-4 rounded-2xl bg-navy text-primary-foreground font-heading font-extrabold flex items-center justify-center shadow-vacation"
         >
           Log in
         </button>
 
         <button
           onClick={() => onLogIn(nameFromEmail)}
-          className="mt-4 text-sm font-semibold text-muted-foreground"
+          className="mt-5 text-sm font-semibold text-muted-foreground"
         >
           New here? Create an account
         </button>
-      </motion.div>
+        </motion.div>
+      </div>
     </div>
   );
 };

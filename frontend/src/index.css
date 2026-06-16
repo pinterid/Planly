@@ -69,15 +69,19 @@
   * {
     @apply border-border;
   }
+  html,
+  body,
+  #root {
+    height: 100%;
+    overflow: hidden;
+  }
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-body);
-    min-height: 100vh;
     background: hsl(var(--background));
   }
   #root {
     width: 100%;
-    min-height: 100vh;
     margin: 0 auto;
   }
   h1, h2, h3, h4, h5, h6 {
@@ -118,6 +122,15 @@
   }
   .app-shell {
     background: linear-gradient(180deg, hsl(var(--soft-blue)) 0%, hsl(var(--background)) 16rem, hsl(var(--background)) 100%);
+  }
+  .app-shell .planly-sonner[data-sonner-toaster] {
+    position: absolute !important;
+    left: 1rem !important;
+    right: 1rem !important;
+    bottom: 5.25rem !important;
+    width: auto !important;
+    max-width: none !important;
+    transform: none !important;
   }
   .login-field {
     @apply flex items-center gap-3 rounded-[1.5rem] bg-white px-4 py-4 shadow-card border border-border;

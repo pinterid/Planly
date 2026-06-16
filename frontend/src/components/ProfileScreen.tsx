@@ -33,6 +33,7 @@ import {
   FEAR_OPTIONS,
   LANGUAGE_OPTIONS,
   MOBILITY_OPTIONS,
+  MUST_HAVE_OPTIONS,
   NOGO_OPTIONS,
   PREFERRED_GROUP_SIZE_OPTIONS,
   TEMPERATURE_OPTIONS,
@@ -49,7 +50,7 @@ interface ProfileScreenProps {
   onSignOut?: () => void;
 }
 
-type EditSection = "basic" | "travel" | "matching" | "interests" | "nogos" | "comfort" | "visibility";
+type EditSection = "basic" | "travel" | "matching" | "interests" | "mustHaves" | "nogos" | "comfort" | "visibility";
 type Visibility = "Shared with matches" | "Used for suggestions" | "Private";
 
 const requiredChecks = [
@@ -223,6 +224,16 @@ const ProfileScreen = ({ isOnboarding = false, onComplete, onSignOut }: ProfileS
           emptyText="Add at least one travel interest."
           isMissing={profile.activityInterests.length === 0}
           onEdit={() => setActiveEdit("interests")}
+        />
+
+        <ProfileSectionCard
+          icon={<Check size={18} />}
+          title="Must haves"
+          visibility="Used for suggestions"
+          chips={profile.mustHaves}
+          emptyText="No must haves added."
+          helperText="Must haves help Planly avoid plans that miss your essentials."
+          onEdit={() => setActiveEdit("mustHaves")}
         />
 
         <ProfileSectionCard
@@ -612,6 +623,7 @@ const EditSheet = ({
     travel: "Edit travel style & budget",
     matching: "Edit destination interests",
     interests: "Edit interests",
+    mustHaves: "Edit must haves",
     nogos: "Edit no-gos",
     comfort: "Edit health, accessibility & comfort",
     visibility: "Privacy details",
@@ -647,12 +659,15 @@ const EditSheet = ({
             value={profile.duration}
             onChange={(value) => updateProfile({ duration: value })}
           />
-          <ChipEditor label="Travel style" options={TRAVEL_STYLE_OPTIONS} selected={profile.travelStyle} onToggle={(value) => toggleInArray("travelStyle", value)} />
-          <CustomEntry
-            label="Add custom travel style"
-            value={customValue}
-            onChange={setCustomValue}
-            onAdd={() => addCustomItem("travelStyle")}
+          <ChipEditor
+            label="Travel style"
+            options={TRAVEL_STYLE_OPTIONS}
+            selected={profile.travelStyle}
+            onToggle={(value) => toggleInArray("travelStyle", value)}
+            customValue={customValue}
+            onCustomChange={setCustomValue}
+            onCustomAdd={() => addCustomItem("travelStyle")}
+            addLabel="Add custom travel style"
           />
           <SingleChoice label="Preferred weather" options={TEMPERATURE_OPTIONS} selected={profile.preferredTemperature} onSelect={(value) => updateProfile({ preferredTemperature: value })} />
           <div className="rounded-2xl bg-teal-light p-3">
@@ -700,12 +715,33 @@ const EditSheet = ({
 
       {section === "interests" && (
         <div className="flex flex-col gap-4">
-          <ChipEditor label="Interests" options={ACTIVITY_OPTIONS} selected={profile.activityInterests} onToggle={(value) => toggleInArray("activityInterests", value)} />
-          <CustomEntry
-            label="Add custom interest"
-            value={customValue}
-            onChange={setCustomValue}
-            onAdd={() => addCustomItem("activityInterests")}
+          <ChipEditor
+            label="Interests"
+            options={ACTIVITY_OPTIONS}
+            selected={profile.activityInterests}
+            onToggle={(value) => toggleInArray("activityInterests", value)}
+            customValue={customValue}
+            onCustomChange={setCustomValue}
+            onCustomAdd={() => addCustomItem("activityInterests")}
+            addLabel="Add custom interest"
+          />
+        </div>
+      )}
+
+      {section === "mustHaves" && (
+        <div className="flex flex-col gap-4">
+          <p className="rounded-2xl bg-teal-light p-3 text-sm leading-6 text-foreground">
+            Must haves are essentials Planly should keep in mind for group suggestions.
+          </p>
+          <ChipEditor
+            label="Must haves"
+            options={MUST_HAVE_OPTIONS}
+            selected={profile.mustHaves}
+            onToggle={(value) => toggleInArray("mustHaves", value)}
+            customValue={customValue}
+            onCustomChange={setCustomValue}
+            onCustomAdd={() => addCustomItem("mustHaves")}
+            addLabel="Add custom must have"
           />
         </div>
       )}
@@ -713,12 +749,15 @@ const EditSheet = ({
       {section === "nogos" && (
         <div className="flex flex-col gap-4">
           <p className="rounded-2xl bg-warning-light p-3 text-sm text-foreground">No-gos are treated as strong constraints in suggestions.</p>
-          <ChipEditor label="No-gos" options={NOGO_OPTIONS} selected={profile.noGos} onToggle={(value) => toggleInArray("noGos", value)} />
-          <CustomEntry
-            label="Add custom no-go"
-            value={customValue}
-            onChange={setCustomValue}
-            onAdd={() => addCustomItem("noGos")}
+          <ChipEditor
+            label="No-gos"
+            options={NOGO_OPTIONS}
+            selected={profile.noGos}
+            onToggle={(value) => toggleInArray("noGos", value)}
+            customValue={customValue}
+            onCustomChange={setCustomValue}
+            onCustomAdd={() => addCustomItem("noGos")}
+            addLabel="Add custom no-go"
           />
         </div>
       )}
@@ -728,15 +767,36 @@ const EditSheet = ({
           <p className="rounded-2xl bg-teal-light p-3 text-sm leading-6 text-foreground">
             These details stay private and are only used to improve suggestions unless you choose to share them.
           </p>
-          <ChipEditor label="Health details" options={DISABILITY_OPTIONS} selected={profile.disabilities} onToggle={(value) => toggleInArray("disabilities", value)} />
-          <ChipEditor label="Comfort concerns" options={FEAR_OPTIONS} selected={profile.fears} onToggle={(value) => toggleInArray("fears", value)} />
+          <ChipEditor
+            label="Health details"
+            options={DISABILITY_OPTIONS}
+            selected={profile.disabilities}
+            onToggle={(value) => toggleInArray("disabilities", value)}
+            customValue={customValue}
+            onCustomChange={setCustomValue}
+            onCustomAdd={() => addCustomItem("disabilities")}
+            addLabel="Add custom health detail"
+          />
+          <ChipEditor
+            label="Comfort concerns"
+            options={FEAR_OPTIONS}
+            selected={profile.fears}
+            onToggle={(value) => toggleInArray("fears", value)}
+            customValue={customValue}
+            onCustomChange={setCustomValue}
+            onCustomAdd={() => addCustomItem("fears")}
+            addLabel="Add custom comfort concern"
+          />
           <SingleChoice label="Mobility" options={MOBILITY_OPTIONS} selected={profile.mobilityLevel} onSelect={(value) => updateProfile({ mobilityLevel: value })} />
-          <ChipEditor label="Dietary needs" options={DIETARY_OPTIONS} selected={profile.dietaryNeeds} onToggle={(value) => toggleInArray("dietaryNeeds", value)} />
-          <CustomEntry
-            label="Add custom private note"
-            value={customValue}
-            onChange={setCustomValue}
-            onAdd={() => addCustomItem("disabilities")}
+          <ChipEditor
+            label="Dietary needs"
+            options={DIETARY_OPTIONS}
+            selected={profile.dietaryNeeds}
+            onToggle={(value) => toggleInArray("dietaryNeeds", value)}
+            customValue={customValue}
+            onCustomChange={setCustomValue}
+            onCustomAdd={() => addCustomItem("dietaryNeeds")}
+            addLabel="Add custom dietary need"
           />
         </div>
       )}
@@ -773,12 +833,12 @@ const VisibilityRule = ({ icon, title, text }: { icon: React.ReactNode; title: s
 );
 
 const SheetFrame = ({ title, children, onClose }: { title: string; children: React.ReactNode; onClose: () => void }) => (
-  <div className="fixed inset-0 z-[70] bg-foreground/25 backdrop-blur-sm flex items-end justify-center px-3 pb-3">
+  <div className="fixed inset-y-0 left-1/2 z-[70] flex w-full max-w-[430px] -translate-x-1/2 items-end justify-center bg-foreground/25 px-3 backdrop-blur-sm md:inset-y-6 md:rounded-[2rem]">
     <motion.div
       initial={{ y: 28, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       exit={{ y: 28, opacity: 0 }}
-      className="w-full max-w-[430px] max-h-[86vh] overflow-y-auto rounded-[1.75rem] bg-background p-4 shadow-vacation"
+      className="w-full max-h-[calc(100svh-3rem)] overflow-y-auto rounded-t-[1.75rem] bg-background p-4 pb-24 shadow-vacation md:max-h-[calc(100vh-6rem)]"
     >
       <div className="flex items-center justify-between gap-3 mb-4">
         <h2 className="font-heading text-lg font-extrabold">{title}</h2>
@@ -883,7 +943,7 @@ const RangeField = ({
   };
 
   return (
-    <div>
+    <div className="rounded-2xl border border-border/70 bg-card p-3 shadow-card">
       <p className="text-sm font-semibold text-muted-foreground mb-2">{label}</p>
       <div className="grid grid-cols-2 gap-2">
         <label className="rounded-2xl border border-border bg-white px-3 py-2">
@@ -998,7 +1058,7 @@ const ChipEditor = ({
 };
 
 const SingleChoice = ({ label, options, selected, onSelect }: { label: string; options: string[]; selected: string; onSelect: (value: string) => void }) => (
-  <div>
+  <div className="rounded-2xl border border-border/70 bg-card p-3 shadow-card">
     <p className="text-sm font-semibold text-muted-foreground mb-2">{label}</p>
     <div className="flex flex-wrap gap-2">
       {options.map((option) => (
@@ -1012,24 +1072,6 @@ const SingleChoice = ({ label, options, selected, onSelect }: { label: string; o
           {option}
         </button>
       ))}
-    </div>
-  </div>
-);
-
-const CustomEntry = ({ label, value, onChange, onAdd }: { label: string; value: string; onChange: (value: string) => void; onAdd: () => void }) => (
-  <div className="rounded-2xl bg-card border border-border p-3">
-    <p className="text-sm font-heading font-bold">{label}</p>
-    <p className="text-xs text-muted-foreground mt-1">Custom entries help Planly understand your travel preferences more precisely.</p>
-    <div className="mt-3 flex gap-2">
-      <input
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        className="min-w-0 flex-1 rounded-2xl border border-border bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
-        placeholder="Add custom entry"
-      />
-      <button onClick={onAdd} className="w-10 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center" aria-label={label}>
-        <Plus size={16} />
-      </button>
     </div>
   </div>
 );
@@ -1096,11 +1138,10 @@ const OnboardingProfile = ({
   onComplete: () => void;
 }) => {
   const steps = [
-    { title: "Welcome to Planly", subtitle: "Set up the details Planly needs for better suggestions." },
-    { title: "How will you start?", subtitle: "Choose whether you already have a group or want to find buddies." },
+    { title: "Welcome to Planly", subtitle: "Choose how you want to start." },
     { title: "Basic information", subtitle: "Required details for matching." },
-    { title: "Travel preferences", subtitle: "Required ranges and styles for suggestions." },
-    { title: "Interests", subtitle: "Add at least one interest." },
+    { title: "Travel preferences", subtitle: "Add the most useful matching details." },
+    { title: "Interests", subtitle: "Add destinations and activities you like." },
     { title: "Optional constraints", subtitle: "No-gos and private comfort details can improve suggestions." },
     { title: "Ready", subtitle: "Review what is missing before you start." },
   ];
@@ -1115,7 +1156,7 @@ const OnboardingProfile = ({
   const inviteLink = `https://planly.app/invite/demo-${profile.id}`;
 
   const next = () => {
-    if (step === 2 && !canContinueFromBasic) {
+    if (step === 1 && !canContinueFromBasic) {
       toast.error("Please complete your basic information before continuing.");
       return;
     }
@@ -1128,10 +1169,14 @@ const OnboardingProfile = ({
 
   const reviewMissingDetails = () => {
     if (!profile.preferredGroupSize) {
-      setStep(1);
+      setStep(0);
       return;
     }
     if (!profile.budgetRange || !profile.duration || profile.travelStyle.length === 0) {
+      setStep(2);
+      return;
+    }
+    if (profile.destinationInterests.length === 0 || profile.activityInterests.length === 0) {
       setStep(3);
       return;
     }
@@ -1148,8 +1193,8 @@ const OnboardingProfile = ({
   };
 
   return (
-    <div className="px-4 pt-6 pb-4 min-h-screen flex flex-col">
-      <div className="mb-6">
+    <div className="flex h-full min-h-0 flex-col px-4 pt-5">
+      <div className="mb-4 shrink-0">
         <div className="flex gap-1 mb-4">
           {steps.map((_, index) => (
             <div key={index} className={`h-1 flex-1 rounded-full ${index <= step ? "bg-primary" : "bg-secondary"}`} />
@@ -1159,7 +1204,7 @@ const OnboardingProfile = ({
         <p className="text-sm text-muted-foreground">{steps[step].subtitle}</p>
       </div>
 
-      <motion.div key={step} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="flex-1 flex flex-col gap-5">
+      <motion.div key={step} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="min-h-0 flex-1 overflow-y-auto pb-4 flex flex-col gap-4">
         {step === 0 && (
           <>
             <div className="rounded-2xl bg-card p-5 shadow-card">
@@ -1168,50 +1213,37 @@ const OnboardingProfile = ({
                 Planly uses your preferences as decision support. You stay in control of what gets shared.
               </p>
             </div>
+            <div className="flex flex-col gap-3">
+              <ModeCard icon={<UserPlus size={22} />} title="I want to find a group" desc="Continue to buddy matching after setup." selected={profile.travelMode === "solo"} onClick={() => updateProfile({ travelMode: "solo" })} />
+              <ModeCard icon={<Users size={22} />} title="I already have a group" desc="Create a mock invite link for friends." selected={profile.travelMode === "friends"} onClick={() => updateProfile({ travelMode: "friends" })} />
+              {profile.travelMode === "friends" && (
+                <div className="rounded-2xl bg-card p-4 shadow-card border border-border">
+                  <p className="font-heading font-bold text-sm">Invite friends</p>
+                  <p className="mt-2 truncate rounded-2xl bg-secondary px-3 py-2 text-xs text-muted-foreground">{inviteLink}</p>
+                  <button onClick={copyInvite} className="mt-3 w-full rounded-2xl bg-primary py-3 text-sm font-heading font-bold text-primary-foreground">
+                    Copy invite link
+                  </button>
+                </div>
+              )}
+              {profile.travelMode === "solo" && (
+                <>
+                  <div className="rounded-2xl bg-teal-light p-3">
+                    <p className="font-heading font-bold text-sm">Preferred group size</p>
+                    <p className="text-xs text-foreground mt-1">Used for suggestions</p>
+                  </div>
+                  <SingleChoice
+                    label="Choose a size"
+                    options={PREFERRED_GROUP_SIZE_OPTIONS}
+                    selected={profile.preferredGroupSize}
+                    onSelect={(value) => updateProfile({ preferredGroupSize: value })}
+                  />
+                </>
+              )}
+            </div>
             <PrivacySetupNote />
           </>
         )}
         {step === 1 && (
-          <div className="flex flex-col gap-3">
-            <ModeCard icon={<UserPlus size={22} />} title="I want to find a group" desc="Continue to buddy matching after setup." selected={profile.travelMode === "solo"} onClick={() => updateProfile({ travelMode: "solo" })} />
-            <ModeCard icon={<Users size={22} />} title="I already have a group" desc="Create a mock invite link for friends." selected={profile.travelMode === "friends"} onClick={() => updateProfile({ travelMode: "friends" })} />
-            {profile.travelMode === "solo" && (
-              <div className="rounded-2xl bg-card p-4 shadow-card border border-border">
-                <div className="mb-3">
-                  <p className="font-heading font-bold text-sm">Preferred group size</p>
-                  <p className="text-xs text-teal font-semibold mt-1">Used for suggestions</p>
-                </div>
-                <SingleChoice
-                  label="Choose a size"
-                  options={PREFERRED_GROUP_SIZE_OPTIONS}
-                  selected={profile.preferredGroupSize}
-                  onSelect={(value) => updateProfile({ preferredGroupSize: value })}
-                />
-                <CustomSingleEntry
-                  label="Add custom group size"
-                  value={customValue}
-                  onChange={setCustomValue}
-                  onAdd={() => {
-                    const value = customValue.trim();
-                    if (!value) return;
-                    updateProfile({ preferredGroupSize: value });
-                    setCustomValue("");
-                  }}
-                />
-              </div>
-            )}
-            {profile.travelMode === "friends" && (
-              <div className="rounded-2xl bg-card p-4 shadow-card border border-border">
-                <p className="font-heading font-bold text-sm">Invite friends</p>
-                <p className="mt-2 truncate rounded-2xl bg-secondary px-3 py-2 text-xs text-muted-foreground">{inviteLink}</p>
-                <button onClick={copyInvite} className="mt-3 w-full rounded-2xl bg-primary py-3 text-sm font-heading font-bold text-primary-foreground">
-                  Copy invite link
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-        {step === 2 && (
           <>
             <RequiredHint />
             <TextField label="Name" value={profile.name} onChange={(value) => updateProfile({ name: value })} />
@@ -1228,7 +1260,7 @@ const OnboardingProfile = ({
             />
           </>
         )}
-        {step === 3 && (
+        {step === 2 && (
           <>
             <OptionalSetupHint />
             <BudgetRangeSlider value={profile.budgetRange} onChange={(value) => updateProfile({ budgetRange: value })} />
@@ -1240,17 +1272,20 @@ const OnboardingProfile = ({
               value={profile.duration}
               onChange={(value) => updateProfile({ duration: value })}
             />
-            <ChipEditor label="Travel style" options={TRAVEL_STYLE_OPTIONS} selected={profile.travelStyle} onToggle={(value) => toggleInArray("travelStyle", value)} />
-            <CustomEntry
-              label="Add custom travel style"
-              value={customValue}
-              onChange={setCustomValue}
-              onAdd={() => addCustomItem("travelStyle")}
+            <ChipEditor
+              label="Travel style"
+              options={TRAVEL_STYLE_OPTIONS}
+              selected={profile.travelStyle}
+              onToggle={(value) => toggleInArray("travelStyle", value)}
+              customValue={customValue}
+              onCustomChange={setCustomValue}
+              onCustomAdd={() => addCustomItem("travelStyle")}
+              addLabel="Add custom travel style"
             />
             <SingleChoice label="Preferred weather" options={TEMPERATURE_OPTIONS} selected={profile.preferredTemperature} onSelect={(value) => updateProfile({ preferredTemperature: value })} />
           </>
         )}
-        {step === 4 && (
+        {step === 3 && (
           <>
             <OptionalSetupHint />
             <ChipEditor
@@ -1263,34 +1298,75 @@ const OnboardingProfile = ({
               onCustomAdd={() => addCustomItem("destinationInterests")}
               addLabel="Add destination interest"
             />
-            <div className="rounded-2xl bg-coral-light px-3 py-2 text-xs font-semibold text-primary">
-              Destination interests: Shared with matches
-            </div>
-            <ChipEditor label="Interests" options={ACTIVITY_OPTIONS} selected={profile.activityInterests} onToggle={(value) => toggleInArray("activityInterests", value)} />
-            <CustomEntry
-              label="Add custom interest"
-              value={customValue}
-              onChange={setCustomValue}
-              onAdd={() => addCustomItem("activityInterests")}
+            
+            <ChipEditor
+              label="Interests"
+              options={ACTIVITY_OPTIONS}
+              selected={profile.activityInterests}
+              onToggle={(value) => toggleInArray("activityInterests", value)}
+              customValue={customValue}
+              onCustomChange={setCustomValue}
+              onCustomAdd={() => addCustomItem("activityInterests")}
+              addLabel="Add custom interest"
+            />
+          </>
+        )}
+        {step === 4 && (
+          <>
+            <PrivacySetupNote />
+            <ChipEditor
+              label="Must haves"
+              options={MUST_HAVE_OPTIONS}
+              selected={profile.mustHaves}
+              onToggle={(value) => toggleInArray("mustHaves", value)}
+              customValue={customValue}
+              onCustomChange={setCustomValue}
+              onCustomAdd={() => addCustomItem("mustHaves")}
+              addLabel="Add custom must have"
+            />
+            <ChipEditor
+              label="No-gos"
+              options={NOGO_OPTIONS}
+              selected={profile.noGos}
+              onToggle={(value) => toggleInArray("noGos", value)}
+              customValue={customValue}
+              onCustomChange={setCustomValue}
+              onCustomAdd={() => addCustomItem("noGos")}
+              addLabel="Add custom no-go"
+            />
+            <ChipEditor
+              label="Health details"
+              options={DISABILITY_OPTIONS}
+              selected={profile.disabilities}
+              onToggle={(value) => toggleInArray("disabilities", value)}
+              customValue={customValue}
+              onCustomChange={setCustomValue}
+              onCustomAdd={() => addCustomItem("disabilities")}
+              addLabel="Add custom health detail"
+            />
+            <ChipEditor
+              label="Mobility"
+              options={MOBILITY_OPTIONS}
+              selected={profile.mobilityLevel}
+              onToggle={(value) => toggleInArray("mobilityLevel", value)}
+              customValue={customValue}
+              onCustomChange={setCustomValue}
+              onCustomAdd={() => addCustomItem("mobilityLevel")}
+              addLabel="Add custom mobility level"
+            />
+            <ChipEditor
+              label="Dietary needs"
+              options={DIETARY_OPTIONS}
+              selected={profile.dietaryNeeds}
+              onToggle={(value) => toggleInArray("dietaryNeeds", value)}
+              customValue={customValue}
+              onCustomChange={setCustomValue}
+              onCustomAdd={() => addCustomItem("dietaryNeeds")}
+              addLabel="Add custom dietary need"
             />
           </>
         )}
         {step === 5 && (
-          <>
-            <PrivacySetupNote />
-            <ChipEditor label="No-gos optional" options={NOGO_OPTIONS} selected={profile.noGos} onToggle={(value) => toggleInArray("noGos", value)} />
-            <CustomEntry
-              label="Add custom no-go"
-              value={customValue}
-              onChange={setCustomValue}
-              onAdd={() => addCustomItem("noGos")}
-            />
-            <ChipEditor label="Health details" options={DISABILITY_OPTIONS} selected={profile.disabilities} onToggle={(value) => toggleInArray("disabilities", value)} />
-            <SingleChoice label="Mobility" options={MOBILITY_OPTIONS} selected={profile.mobilityLevel} onSelect={(value) => updateProfile({ mobilityLevel: value })} />
-            <ChipEditor label="Dietary needs" options={DIETARY_OPTIONS} selected={profile.dietaryNeeds} onToggle={(value) => toggleInArray("dietaryNeeds", value)} />
-          </>
-        )}
-        {step === 6 && (
           <div className="rounded-2xl bg-card p-5 shadow-card">
             <div className="w-12 h-12 rounded-2xl bg-teal-light text-teal flex items-center justify-center mb-4">
               <Check size={22} />
@@ -1318,7 +1394,7 @@ const OnboardingProfile = ({
       </motion.div>
 
       {step === steps.length - 1 ? (
-        <div className="flex flex-col gap-2 mt-6">
+        <div className="shrink-0 flex flex-col gap-2 border-t border-border/60 bg-background/95 py-3">
           {hasMissingPreferences && (
             <button onClick={reviewMissingDetails} className="w-full py-3 rounded-xl bg-secondary text-secondary-foreground font-heading font-semibold">
               Review missing details
@@ -1333,7 +1409,7 @@ const OnboardingProfile = ({
           </button>
         </div>
       ) : (
-        <div className="flex gap-3 mt-6">
+        <div className="shrink-0 flex gap-3 border-t border-border/60 bg-background/95 py-3">
           {step > 0 && (
             <button onClick={() => setStep((current) => current - 1)} className="flex-1 py-3 rounded-xl bg-secondary text-secondary-foreground font-heading font-semibold">
               Back

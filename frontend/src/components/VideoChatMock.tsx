@@ -34,7 +34,7 @@ const VideoChatMock = ({ self, participants, onEnd, context }: VideoChatMockProp
     count === 1 ? "grid-cols-1" : count === 2 ? "grid-cols-1" : "grid-cols-2";
 
   return (
-    <div className="fixed inset-0 z-[60] bg-background text-foreground flex flex-col">
+    <div className="fixed inset-y-0 left-1/2 z-[60] flex w-full max-w-[430px] -translate-x-1/2 flex-col overflow-hidden bg-background text-foreground shadow-vacation md:inset-y-6 md:rounded-[2rem]">
       {/* Top bar */}
       <div className="flex items-center justify-between px-4 pt-4 pb-2 text-foreground">
         <div className="flex items-center gap-2 text-xs">

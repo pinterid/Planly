@@ -245,11 +245,14 @@ const FilterChip = ({
 );
 
 const BottomSheet = ({ children, onClose }: { children: React.ReactNode; onClose: () => void }) => (
-  <div className="fixed inset-0 z-[80] flex items-end justify-center bg-foreground/20 px-4 pb-24" onClick={onClose}>
+  <div
+    className="fixed inset-y-0 left-1/2 z-[80] flex w-full max-w-[430px] -translate-x-1/2 items-end justify-center bg-foreground/20 px-4 md:inset-y-6 md:rounded-[2rem]"
+    onClick={onClose}
+  >
     <motion.div
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
-      className="max-h-[calc(100vh-8rem)] w-full max-w-[398px] overflow-y-auto rounded-3xl bg-card p-4 pb-6 shadow-vacation"
+      className="max-h-[calc(100svh-3rem)] w-full max-w-[398px] overflow-y-auto rounded-t-3xl bg-card p-4 pb-24 shadow-vacation md:max-h-[calc(100vh-6rem)]"
       onClick={(event) => event.stopPropagation()}
     >
       <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-border" />

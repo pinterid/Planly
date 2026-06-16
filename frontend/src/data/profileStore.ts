@@ -14,9 +14,10 @@ export interface UserProfile {
   travelMode: "solo" | "friends" | "";
   preferredGroupSize: string;
   destinationInterests: string[];
+  mustHaves: string[];
   dietaryNeeds: string[];
   languages: string[];
-  mobilityLevel: string;
+  mobilityLevel: string[];
   accommodationPrefs: string[];
   activityInterests: string[];
   dislikes: string[];
@@ -94,6 +95,7 @@ const defaultProfile: UserProfile = {
   travelMode: "",
   preferredGroupSize: "",
   destinationInterests: [],
+  mustHaves: [],
   dietaryNeeds: [],
   languages: [],
   mobilityLevel: "No restrictions",
@@ -201,7 +203,7 @@ export const addGroup = (name: string): GroupWithPrefs => {
       {
         memberId: profile.id,
         memberName: profile.name || "You",
-        preferences: profile.activityInterests,
+        preferences: [...profile.activityInterests, ...profile.mustHaves],
         dislikes: [...profile.dislikes, ...profile.noGos],
         budgetRange: profile.budgetRange,
         mobilityLevel: profile.mobilityLevel,
@@ -376,6 +378,7 @@ export const FEAR_OPTIONS = ["Heights", "Flying", "Water/swimming", "Crowds", "E
 export const TRAVEL_STYLE_OPTIONS = ["Adventure", "Relaxation", "Cultural", "Luxury", "Budget"];
 export const PREFERRED_GROUP_SIZE_OPTIONS = ["2 people", "3-5 people", "6-10 people", "Open to any size"];
 export const DESTINATION_INTEREST_OPTIONS = ["Southern Europe", "Northern Europe", "Beach destinations", "Mountains", "City trips", "Warm countries", "Open to inspiration"];
+export const MUST_HAVE_OPTIONS = ["Good public transport", "Safe area", "Central accommodation", "Flexible schedule", "Clear budget", "Shared planning"];
 export const BUDGET_OPTIONS = ["€", "€€", "€€€"];
 export const DURATION_OPTIONS = ["1-2 Days", "2-4 Days", "4+ Days"];
 export const TEMPERATURE_OPTIONS = ["Warm", "Mild", "Cool"];
