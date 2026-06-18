@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Users,
@@ -178,7 +178,7 @@ const GroupPlanningScreen = ({ initialGroupId, onGroupOpened, onOpenProfile, onO
   );
 };
 
-type View = "overview" | "member-prefs" | "voting" | "result" | "no-match" | "chat" | "videochat";
+type View = "overview" | "member-prefs" | "ai-suggestions" | "voting" | "result" | "no-match" | "chat" | "videochat";
 type AddSheetMode = "menu" | "invite" | "travel-confirm" | "travel-success";
 
 const unique = (items: string[]) => Array.from(new Set(items.filter(Boolean)));
@@ -337,12 +337,32 @@ const GroupDetail = ({
     setView("voting");
   };
 
+  const prepareAISuggestions = () => {
+    persist((g) => {
+      const excluded = g.trips.filter((t) => t.votes.some((v) => v.vote === "nogo")).map((t) => t.name);
+      g.trips = scoreTripsForGroup(g, excluded);
+      g.votingRound = (g.votingRound || 0) + 1;
+      g.decidedTrip = undefined;
+    });
+    setView("ai-suggestions");
+  };
+
   if (view === "member-prefs" && editingMember) {
     return (
       <MemberTravelProfile
         member={editingMember}
         onBack={() => { setEditingMember(null); setView("overview"); }}
         onOpenProfile={onOpenProfile}
+      />
+    );
+  }
+
+  if (view === "ai-suggestions") {
+    return (
+      <AISuggestionsView
+        group={getGroups().find((g) => g.id === group.id)!}
+        onBack={() => setView("overview")}
+        onStartVote={() => setView("voting")}
       />
     );
   }
@@ -586,7 +606,7 @@ const GroupDetail = ({
           </button>
         ) : (
           <button
-            onClick={startVoting}
+            onClick={prepareAISuggestions}
             className="w-full py-3 rounded-xl gradient-coral text-primary-foreground font-heading font-semibold flex items-center justify-center gap-2 shadow-card"
           >
             <Sparkles size={18} /> Get Planly AI suggestions & vote
@@ -789,6 +809,154 @@ const AddToGroupSheet = ({
   </BottomSheet>
 );
 
+const aiAnalysisSteps = [
+  "Reading group travel profiles",
+  "Comparing shared preferences",
+  "Checking conflicts and no-gos",
+  "Scoring destination fit",
+  "Preparing balanced vote options",
+];
+
+const AISuggestionsView = ({
+  group,
+  onBack,
+  onStartVote,
+}: {
+  group: GroupWithPrefs;
+  onBack: () => void;
+  onStartVote: () => void;
+}) => {
+  const [activeStep, setActiveStep] = useState(0);
+  const isComplete = activeStep >= aiAnalysisSteps.length;
+  const topTrips = group.trips.slice(0, 3);
+
+  useEffect(() => {
+    if (isComplete) return;
+    const timer = window.setTimeout(() => {
+      setActiveStep((step) => Math.min(step + 1, aiAnalysisSteps.length));
+    }, 720);
+    return () => window.clearTimeout(timer);
+  }, [activeStep, isComplete]);
+
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="px-4 pt-4 pb-4">
+      <button onClick={onBack} className="text-sm text-primary font-medium mb-4 flex items-center gap-1">
+        <ChevronLeft size={16} /> Back
+      </button>
+
+      <section className="rounded-3xl bg-card p-4 shadow-card border border-border/60 overflow-hidden">
+        <div className="flex items-start gap-3">
+          <div className="relative flex h-11 w-11 items-center justify-center rounded-2xl bg-teal-light text-teal">
+            <motion.span
+              className="absolute inset-0 rounded-2xl border border-teal/30"
+              animate={{ scale: [1, 1.18, 1], opacity: [0.7, 0, 0.7] }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+            />
+            <Bot size={20} />
+          </div>
+          <div className="flex-1">
+            <p className="font-heading text-lg font-bold">Planly AI is building suggestions</p>
+            <p className="mt-1 text-sm leading-6 text-muted-foreground">
+              Your group's preferences, no-gos, budget signals, and mobility needs are being weighed before voting starts.
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-5 space-y-2">
+          {aiAnalysisSteps.map((step, index) => {
+            const done = index < activeStep;
+            const current = index === activeStep && !isComplete;
+            return (
+              <motion.div
+                key={step}
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.04 }}
+                className={`flex items-center gap-3 rounded-2xl px-3 py-2.5 ${
+                  done || current ? "bg-secondary text-foreground" : "text-muted-foreground"
+                }`}
+              >
+                <div className={`flex h-6 w-6 items-center justify-center rounded-full ${
+                  done ? "bg-teal text-primary-foreground" : current ? "bg-teal-light text-teal" : "bg-border text-muted-foreground"
+                }`}>
+                  {done ? (
+                    <CheckCircle2 size={14} />
+                  ) : current ? (
+                    <motion.span
+                      className="h-2.5 w-2.5 rounded-full bg-teal"
+                      animate={{ scale: [0.85, 1.2, 0.85], opacity: [0.55, 1, 0.55] }}
+                      transition={{ duration: 0.9, repeat: Infinity, ease: "easeInOut" }}
+                    />
+                  ) : (
+                    <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                  )}
+                </div>
+                <span className="text-sm font-heading font-semibold">{step}</span>
+              </motion.div>
+            );
+          })}
+        </div>
+      </section>
+
+      <AnimatePresence>
+        {isComplete && (
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 18 }}
+            className="mt-4 space-y-3"
+          >
+            <div className="flex items-center justify-between">
+              <h2 className="font-heading text-lg font-bold">Ready to vote</h2>
+              <span className="rounded-full bg-teal-light px-3 py-1 text-xs font-heading font-bold text-teal">
+                Round {group.votingRound}
+              </span>
+            </div>
+
+            {topTrips.map((trip, index) => {
+              const explanation = getTripExplanation(group, trip);
+              return (
+                <motion.div
+                  key={trip.name}
+                  initial={{ opacity: 0, y: 14 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.08 }}
+                  className="rounded-2xl bg-card p-4 shadow-card border border-border/60"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="font-heading font-bold">{trip.name}, {trip.country}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">{trip.travelStyle} - {trip.durationDays} days - EUR {trip.budgetEur} p.P.</p>
+                    </div>
+                    <div className="rounded-2xl bg-teal-light px-3 py-2 text-center text-teal">
+                      <p className="font-heading text-sm font-bold">{trip.score}%</p>
+                      <p className="text-[10px] font-semibold">fit</p>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 rounded-2xl bg-secondary px-3 py-2">
+                    <p className="text-xs font-heading font-bold text-foreground">Why Planly picked this</p>
+                    <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                      Matches {explanation.matched.slice(0, 3).join(", ")}. {explanation.compromise}
+                    </p>
+                  </div>
+                </motion.div>
+              );
+            })}
+
+            <button
+              onClick={onStartVote}
+              className="w-full py-3 rounded-xl gradient-coral text-primary-foreground font-heading font-semibold flex items-center justify-center gap-2 shadow-card"
+            >
+              <ThumbsUp size={18} /> Start voting on AI suggestions
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+};
+
 const VotingView = ({
   group,
   onCancel,
@@ -870,7 +1038,7 @@ const VotingView = ({
                   myVote === "no" ? "bg-coral-light text-coral" :
                   "bg-secondary text-muted-foreground"
                 }`}>
-                  {myVote === "yes" ? "I\'m in" : myVote === "no" ? "Not for me" : "No-go for me"}
+                  {myVote === "yes" ? "I'm in" : myVote === "no" ? "Not for me" : "No-go for me"}
                 </div>
               ) : (
                 <>
