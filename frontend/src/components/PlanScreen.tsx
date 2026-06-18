@@ -112,7 +112,7 @@ const PlanScreen = () => {
             className="w-full py-3 rounded-xl gradient-coral text-primary-foreground font-heading font-semibold flex items-center justify-center gap-2 shadow-card hover:shadow-card-hover transition-shadow"
           >
             <Sparkles size={18} />
-            Find Trips
+            Find suggested trips
           </button>
         </motion.div>
       ) : (
@@ -125,12 +125,12 @@ const PlanScreen = () => {
           </button>
           {/* Likeness summary */}
           <div className="grid grid-cols-3 gap-2 mb-4">
-            <StatCard icon={<TrendingUp size={14} />} label="Avg match" value={`${avgLikeness}%`} />
+            <StatCard icon={<TrendingUp size={14} />} label="Avg fit" value={`${avgLikeness}%`} />
             <StatCard icon={<Star size={14} />} label="Top pick" value={topMatch.destination} />
             <StatCard icon={<Heart size={14} />} label="Liked by" value={`${topMatch.likes.toLocaleString()}`} />
           </div>
 
-          <h2 className="font-heading text-lg font-bold mb-4">Trip Options</h2>
+          <h2 className="font-heading text-lg font-bold mb-4">Suggested trips</h2>
           <div className="space-y-4">
             {tripOptions.map((trip, i) => (
               <motion.button
@@ -154,7 +154,7 @@ const PlanScreen = () => {
                   />
                   <div className="absolute top-2 left-2 px-2 py-1 rounded-full bg-background/90 backdrop-blur text-xs font-bold flex items-center gap-1">
                     <TrendingUp size={12} className="text-primary" />
-                    {trip.likeness}% match
+                    {trip.likeness}% estimated fit
                   </div>
                   <button
                     onClick={(e) => {
@@ -192,7 +192,7 @@ const PlanScreen = () => {
                   <div className="flex items-center gap-2">
                     <div className="flex-1 h-1.5 rounded-full bg-secondary overflow-hidden">
                       <div
-                        className="h-full gradient-coral"
+                        className="h-full bg-teal"
                         style={{ width: `${trip.likeness}%` }}
                       />
                     </div>
@@ -243,14 +243,14 @@ const TripDetailModal = ({
     animate={{ opacity: 1 }}
     exit={{ opacity: 0 }}
     onClick={onClose}
-    className="fixed inset-0 z-50 bg-background/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-3"
+    className="fixed inset-y-0 left-1/2 z-50 flex w-full max-w-[430px] -translate-x-1/2 items-end justify-center bg-background/70 p-3 pb-24 backdrop-blur-sm md:inset-y-6 md:items-center md:rounded-[2rem]"
   >
     <motion.div
       initial={{ y: 40, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       exit={{ y: 40, opacity: 0 }}
       onClick={(e) => e.stopPropagation()}
-      className="bg-card w-full max-w-md rounded-2xl overflow-hidden shadow-card-hover max-h-[85vh] overflow-y-auto"
+      className="bg-card w-full max-w-md rounded-2xl overflow-hidden shadow-card-hover max-h-[calc(100svh-9rem)] overflow-y-auto md:max-h-[calc(100vh-12rem)]"
     >
       <div className="relative">
         <img src={images[trip.image]} alt={trip.destination} className="w-full h-44 object-cover" />
@@ -324,7 +324,7 @@ const TripDetailModal = ({
         </div>
 
         <button className="w-full py-3 rounded-xl gradient-coral text-primary-foreground font-heading font-semibold shadow-card">
-          Book this trip
+          Add to Suggested Plan
         </button>
       </div>
     </motion.div>

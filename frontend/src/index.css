@@ -6,54 +6,62 @@
 
 @layer base {
   :root {
-    --background: 30 25% 97%;
-    --foreground: 220 20% 12%;
+    --background: 214 54% 97%;
+    --foreground: 214 40% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 220 20% 12%;
+    --card-foreground: 214 40% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 20% 12%;
+    --popover-foreground: 214 40% 15%;
 
-    --primary: 16 85% 60%;
+    --primary: 340 32% 59%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 14% 94%;
-    --secondary-foreground: 220 20% 12%;
+    --secondary: 203 64% 96%;
+    --secondary-foreground: 212 35% 22%;
 
-    --muted: 220 14% 94%;
-    --muted-foreground: 220 10% 50%;
+    --muted: 203 64% 96%;
+    --muted-foreground: 220 13% 46%;
 
-    --accent: 168 55% 48%;
+    --accent: 188 75% 35%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 72% 55%;
+    --destructive: 5 52% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 14% 90%;
-    --input: 220 14% 90%;
-    --ring: 16 85% 60%;
+    --border: 214 35% 92%;
+    --input: 214 35% 92%;
+    --ring: 340 32% 59%;
 
-    --radius: 1rem;
+    --radius: 1.5rem;
 
-    --coral: 16 85% 60%;
-    --coral-light: 16 85% 95%;
-    --teal: 168 55% 48%;
-    --teal-light: 168 55% 93%;
-    --amber: 38 92% 55%;
-    --amber-light: 38 92% 93%;
+    --soft-navy: 212 35% 22%;
+    --sky-blue: 204 84% 93%;
+    --soft-blue: 203 64% 96%;
+    --teal: 188 75% 35%;
+    --teal-light: 183 47% 93%;
+    --rose: 340 32% 59%;
+    --rose-dark: 332 26% 45%;
+    --rose-light: 330 35% 93%;
+    --warning: 40 67% 55%;
+    --warning-light: 42 58% 92%;
+    --coral: var(--rose);
+    --coral-light: var(--rose-light);
+    --amber: var(--warning);
+    --amber-light: var(--warning-light);
 
     --font-heading: 'Plus Jakarta Sans', sans-serif;
     --font-body: 'DM Sans', sans-serif;
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-background: 214 54% 97%;
+    --sidebar-foreground: 214 40% 15%;
+    --sidebar-primary: 212 35% 22%;
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 203 64% 96%;
+    --sidebar-accent-foreground: 212 35% 22%;
+    --sidebar-border: 214 35% 92%;
+    --sidebar-ring: 340 32% 59%;
   }
 }
 
@@ -61,9 +69,20 @@
   * {
     @apply border-border;
   }
+  html,
+  body,
+  #root {
+    height: 100%;
+    overflow: hidden;
+  }
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-body);
+    background: hsl(var(--background));
+  }
+  #root {
+    width: 100%;
+    margin: 0 auto;
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);
@@ -71,16 +90,49 @@
 }
 
 @layer utilities {
+  .rounded-xl {
+    border-radius: 1.5rem;
+  }
+  .rounded-2xl {
+    border-radius: 1.625rem;
+  }
   .gradient-coral {
-    background: linear-gradient(135deg, hsl(16 85% 60%), hsl(30 90% 55%));
+    background: hsl(var(--primary));
   }
   .gradient-teal {
-    background: linear-gradient(135deg, hsl(168 55% 48%), hsl(180 50% 42%));
+    background: hsl(var(--teal));
+  }
+  .gradient-ocean {
+    background: linear-gradient(145deg, hsl(var(--teal)), hsl(var(--soft-navy)));
+  }
+  .start-screen-surface {
+    background: linear-gradient(180deg, hsl(var(--sky-blue)) 0%, hsl(var(--background)) 48%, hsl(var(--background)) 100%);
+  }
+  .vacation-sky {
+    background: linear-gradient(180deg, hsl(var(--sky-blue)) 0%, hsl(var(--background)) 54%, hsl(var(--background)) 100%);
   }
   .shadow-card {
-    box-shadow: 0 4px 20px -4px hsl(220 20% 12% / 0.08);
+    box-shadow: 0 16px 36px -28px hsl(214 40% 15% / 0.32);
   }
   .shadow-card-hover {
-    box-shadow: 0 8px 30px -4px hsl(220 20% 12% / 0.12);
+    box-shadow: 0 22px 46px -28px hsl(214 40% 15% / 0.36);
+  }
+  .shadow-vacation {
+    box-shadow: 0 28px 60px -34px hsl(214 40% 15% / 0.38);
+  }
+  .app-shell {
+    background: linear-gradient(180deg, hsl(var(--soft-blue)) 0%, hsl(var(--background)) 16rem, hsl(var(--background)) 100%);
+  }
+  .app-shell .planly-sonner[data-sonner-toaster] {
+    position: absolute !important;
+    left: 1rem !important;
+    right: 1rem !important;
+    bottom: 5.25rem !important;
+    width: auto !important;
+    max-width: none !important;
+    transform: none !important;
+  }
+  .login-field {
+    @apply flex items-center gap-3 rounded-[1.5rem] bg-white px-4 py-4 shadow-card border border-border;
   }
 }

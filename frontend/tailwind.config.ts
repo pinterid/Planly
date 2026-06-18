@@ -59,6 +59,25 @@ export default {
           DEFAULT: "hsl(var(--teal))",
           light: "hsl(var(--teal-light))",
         },
+        rose: {
+          DEFAULT: "hsl(var(--rose))",
+          dark: "hsl(var(--rose-dark))",
+          light: "hsl(var(--rose-light))",
+        },
+        navy: {
+          DEFAULT: "hsl(var(--soft-navy))",
+        },
+        sky: {
+          DEFAULT: "hsl(var(--sky-blue))",
+        },
+        soft: {
+          blue: "hsl(var(--soft-blue))",
+          teal: "hsl(var(--teal-light))",
+        },
+        warning: {
+          DEFAULT: "hsl(var(--warning))",
+          light: "hsl(var(--warning-light))",
+        },
         amber: {
           DEFAULT: "hsl(var(--amber))",
           light: "hsl(var(--amber-light))",

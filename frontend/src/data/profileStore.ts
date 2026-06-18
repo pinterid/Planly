@@ -12,9 +12,12 @@ export interface UserProfile {
   preferredTemperature: string;
   noGos: string[];
   travelMode: "solo" | "friends" | "";
+  preferredGroupSize: string;
+  destinationInterests: string[];
+  mustHaves: string[];
   dietaryNeeds: string[];
   languages: string[];
-  mobilityLevel: string;
+  mobilityLevel: string[];
   accommodationPrefs: string[];
   activityInterests: string[];
   dislikes: string[];
@@ -75,6 +78,7 @@ export interface GroupWithPrefs {
 const PROFILE_KEY = "planly_profile";
 const GROUPS_KEY = "planly_groups";
 const MATCHES_KEY = "planly_matches";
+const SESSION_KEY = "planly_signed_in";
 
 const defaultProfile: UserProfile = {
   id: "self",
@@ -89,6 +93,9 @@ const defaultProfile: UserProfile = {
   preferredTemperature: "",
   noGos: [],
   travelMode: "",
+  preferredGroupSize: "",
+  destinationInterests: [],
+  mustHaves: [],
   dietaryNeeds: [],
   languages: [],
   mobilityLevel: "No restrictions",
@@ -110,6 +117,24 @@ export const saveProfile = (profile: UserProfile) => {
 
 export const isOnboardingComplete = (): boolean => {
   return getProfile().onboardingComplete;
+};
+
+export const isSignedIn = (): boolean => {
+  return localStorage.getItem(SESSION_KEY) === "true";
+};
+
+export const logIn = (name?: string) => {
+  const profile = getProfile();
+  if (name?.trim() && !profile.name) {
+    saveProfile({ ...profile, name: name.trim() });
+  }
+  localStorage.setItem(SESSION_KEY, "true");
+};
+
+export const signIn = logIn;
+
+export const signOut = () => {
+  localStorage.removeItem(SESSION_KEY);
 };
 
 // Groups
@@ -151,7 +176,7 @@ const defaultGroups: GroupWithPrefs[] = [
     chat: [
       { id: "c1", memberId: "m1", memberName: "David", text: "Did you see the photos from the trip to Venice?", ts: Date.now() - 1000 * 60 * 60 * 6 },
       { id: "c2", memberId: "m2", memberName: "Tobias", text: "Yeah, looks like they found the best food spots without even trying.", ts: Date.now() - 1000 * 60 * 60 * 5 },
-      { id: "c3", memberId: "ai", memberName: "Planly AI", text: "I can summarise the trip ideas you've collected so far — just hit Start voting and I'll line up matching destinations.", ts: Date.now() - 1000 * 60 * 60 * 4, isAI: true },
+      { id: "c3", memberId: "ai", memberName: "Planly AI", text: "I can summarise the trip ideas you've collected so far. Start voting when you're ready, and I'll line up suggested destinations.", ts: Date.now() - 1000 * 60 * 60 * 4, isAI: true },
     ],
   },
 ];
@@ -178,7 +203,7 @@ export const addGroup = (name: string): GroupWithPrefs => {
       {
         memberId: profile.id,
         memberName: profile.name || "You",
-        preferences: profile.activityInterests,
+        preferences: [...profile.activityInterests, ...profile.mustHaves],
         dislikes: [...profile.dislikes, ...profile.noGos],
         budgetRange: profile.budgetRange,
         mobilityLevel: profile.mobilityLevel,
@@ -187,7 +212,7 @@ export const addGroup = (name: string): GroupWithPrefs => {
     ],
     trips: [],
     chat: [
-      { id: `c${Date.now()}`, memberId: "ai", memberName: "Planly AI", text: "Group created. Invite your travel buddies and I'll start lining up trip ideas.", ts: Date.now(), isAI: true },
+      { id: `c${Date.now()}`, memberId: "ai", memberName: "Planly AI", text: "Group created. Invite your travel buddies and I'll help structure suggested trip ideas.", ts: Date.now(), isAI: true },
     ],
   };
   groups.push(newGroup);
@@ -351,6 +376,9 @@ export const scoreTripsForGroup = (group: GroupWithPrefs, excludeNames: string[]
 export const DISABILITY_OPTIONS = ["Wheelchair user", "Visual impairment", "Hearing impairment", "Chronic pain", "None"];
 export const FEAR_OPTIONS = ["Heights", "Flying", "Water/swimming", "Crowds", "Enclosed spaces", "None"];
 export const TRAVEL_STYLE_OPTIONS = ["Adventure", "Relaxation", "Cultural", "Luxury", "Budget"];
+export const PREFERRED_GROUP_SIZE_OPTIONS = ["2 people", "3-5 people", "6-10 people", "Open to any size"];
+export const DESTINATION_INTEREST_OPTIONS = ["Southern Europe", "Northern Europe", "Beach destinations", "Mountains", "City trips", "Warm countries", "Open to inspiration"];
+export const MUST_HAVE_OPTIONS = ["Good public transport", "Safe area", "Central accommodation", "Flexible schedule", "Clear budget", "Shared planning"];
 export const BUDGET_OPTIONS = ["€", "€€", "€€€"];
 export const DURATION_OPTIONS = ["1-2 Days", "2-4 Days", "4+ Days"];
 export const TEMPERATURE_OPTIONS = ["Warm", "Mild", "Cool"];
