@@ -11,6 +11,7 @@ export default defineConfig(({ mode }) => ({
       overlay: false,
     },
   },
+  base: mode === "production" ? "/Planly/" : "./",
   plugins: [react()].filter(Boolean),
   resolve: {
     alias: {
